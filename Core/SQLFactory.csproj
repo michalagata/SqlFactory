@@ -16,7 +16,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <ProjectGuid>{00835184-82D5-4720-8750-F99A7209730A}</ProjectGuid>
-    <OutputPath>..\..\..\BIN\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
     <OutputType>Library</OutputType>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
@@ -24,7 +24,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\\SQLFactory.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|BRE' ">
     <DebugType>pdbonly</DebugType>
@@ -38,7 +38,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -49,7 +49,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|AnubisWorks'">
     <OutputPath>bin\AnubisWorks\Release_BRE\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -57,9 +57,9 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|BRE'">
-    <OutputPath>..\..\..\BIN\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <DefineConstants>TRACE;BRE</DefineConstants>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>

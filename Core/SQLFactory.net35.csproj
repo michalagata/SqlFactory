@@ -17,22 +17,22 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\BIN\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <IntermediateOutputPath>obj\Debug\net35\</IntermediateOutputPath>
     <DefineConstants>DEBUG;TRACE;NET35</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\..\BIN\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <IntermediateOutputPath>obj\Release\net35\</IntermediateOutputPath>
     <DefineConstants>TRACE;NET35</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -43,7 +43,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|AnyCPU'">
     <OutputPath>bin\Release_BRE\</OutputPath>
     <DefineConstants>TRACE;NET35</DefineConstants>
-    <DocumentationFile>..\..\..\BIN\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
