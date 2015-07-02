@@ -24,13 +24,13 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>..\DEPLOYMENT\\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|BRE' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <ProjectGuid>{00835184-82D5-4720-8750-F99A7209730A}</ProjectGuid>
-    <OutputPath>..\..\..\BIN\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <IntermediateOutputPath>obj\Release\net40\</IntermediateOutputPath>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <OutputType>Library</OutputType>
@@ -44,10 +44,10 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>AnubisWorks.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|AnubisWorks'">
-    <OutputPath>bin\AnubisWorks\Release_BRE\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
@@ -59,7 +59,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|BRE'">
     <OutputPath>..\DEPLOYMENT\</OutputPath>
     <DefineConstants>TRACE;BRE</DefineConstants>
-    <DocumentationFile>..\DEPLOYMENT\\SQLFactory.XML</DocumentationFile>
+    <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>

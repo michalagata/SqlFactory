@@ -41,7 +41,7 @@
     <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|AnyCPU'">
-    <OutputPath>bin\Release_BRE\</OutputPath>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
     <DefineConstants>TRACE;NET35</DefineConstants>
     <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
