@@ -1,0 +1,16 @@
+[Version 2.0.2.4]
+Got rid of UNIONS
+General exchange: Expando -> Dynamic
+Own LINQ internal engine based on predicates, predicates based on fragments (not only full specification!)
+Type casting
+Record Skip refabrication
+DynMapper finally as Extension
+Added query existance method
+Support for entities with more than single identity
+Reuse of open connections (if state and transaction scope allows to)
+Object String Tracing
+Nested Types (Initial)
+Complex POCO objects support added
+Operators: IF, OR, ForEach
+Batch Commands, Insert Recursions, Transaction Versioning
+Some new, Not Implemented Methods (sorry), essential for me not to forget about implementing them and achieving further functionality

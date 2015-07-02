@@ -1,0 +1,6 @@
+C:\Root\Projects\C#\BIN\SQLFactory.XML
+C:\Root\Projects\C#\BIN\SQLFactory.dll
+C:\Root\Projects\C#\BIN\SQLFactory.pdb
+C:\Root\Projects\C#\!FACTORY\SQLFactory\Core\obj\BRE\Release_BRE\SQLFactory.csprojResolveAssemblyReference.cache
+C:\Root\Projects\C#\!FACTORY\SQLFactory\Core\obj\BRE\Release_BRE\SQLFactory.dll
+C:\Root\Projects\C#\!FACTORY\SQLFactory\Core\obj\BRE\Release_BRE\SQLFactory.pdb

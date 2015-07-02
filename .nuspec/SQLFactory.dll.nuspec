@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>SQLFactory</id>
+    <version>2.0.3.1</version>
+    <authors>Michael Agata</authors>
+    <owners>Michael Agata</owners>
+	<licenseUrl>file://licence/EULA.txt</licenseUrl>
+	<requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>SQL CRUD-alike factory access-layer for Microsoft SQL, Oracle and Open-Source platforms</description>
+    <releaseNotes>Study ChangeLog</releaseNotes>
+    <copyright>Copyright 2013-2014. All Rights Reserved!</copyright>
+    <tags>SQL Factory SQLFactory</tags>
+  </metadata>
+  <files>
+	<file src="..\DEPLOYMENT\*.dll" target="lib\net40" />
+	<file src="licence\*.txt" target="licence" />
+  </files>
+</package>
