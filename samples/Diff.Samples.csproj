@@ -77,8 +77,6 @@
       <DependentUpon>Northwind.mdf</DependentUpon>
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <Content Include="Utilities\ObjectDumper-LICENSE.txt" />
-    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">
