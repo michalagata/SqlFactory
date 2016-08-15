@@ -927,17 +927,10 @@ namespace AnubisWorks.SQLFactory
             return CreateNamedConnection(name, out providerName);
          } 
 
-         providerName = ConfigurationManager.AppSettings[SQLFactory_DefaultProviderName];
-
-         if (providerName == null) {
-            throw new InvalidOperationException(
-               String.Format(CultureInfo.InvariantCulture, "A default provider name must be provided using the '{0}' key in the appSettings configuration section.", SQLFactory_DefaultProviderName)
-            );
-         }
-
+         providerName = ConfigurationManager.AppSettings[SQLFactory_DefaultProviderName] ?? "System.Data.SqlClient";
+            //throw new InvalidOperationException(String.Format(CultureInfo.InvariantCulture, "A default provider name must be provided using the '{0}' key in the appSettings configuration section.", SQLFactory_DefaultProviderName));
          DbProviderFactory factory = GetProviderFactory(providerName);
          DbConnection connection = factory.CreateConnection(connectionString);
-
          return connection;
       }
 
