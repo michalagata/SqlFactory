@@ -1193,6 +1193,7 @@ namespace AnubisWorks.SQLFactory
          var sb = new StringBuilder()
             .Append("INSERT INTO ")
             .Append(returnPropperTableName(metaType))
+//.Append(QuoteIdentifier(metaType.Table.TableName))
             .Append(" (");
 
          for (int i = 0; i < insertingMembers.Length; i++) {
@@ -1272,6 +1273,7 @@ namespace AnubisWorks.SQLFactory
          var sb = new StringBuilder()
             .Append("UPDATE ")
             .Append(returnPropperTableName(metaType))
+//.Append(QuoteIdentifier(metaType.Table.TableName))
             .AppendLine()
             .Append("SET ");
 
@@ -1309,6 +1311,7 @@ namespace AnubisWorks.SQLFactory
          var sb = new StringBuilder()
             .Append("DELETE FROM ")
             .Append(returnPropperTableName(metaType));
+//.Append(QuoteIdentifier(metaType.Table.TableName));
 
          return new SqlBuilder(sb.ToString());
       }
@@ -1348,6 +1351,7 @@ namespace AnubisWorks.SQLFactory
          var sb = new StringBuilder()
             .Append("DELETE FROM ")
             .Append(returnPropperTableName(metaType))
+//.Append(QuoteIdentifier(metaType.Table.TableName))
             .AppendLine()
             .Append("WHERE (")
             .Append(BuildPredicateFragment(entity, predicateMembers, parametersBuffer))
