@@ -16,7 +16,7 @@ namespace RealLifeExample
         public Test(string connectionString, MetaModel mapping, TextWriter log)
         {
 
-            this.db = new TestDatabase(connectionString, mapping)
+            this.db = new TestDatabase(connectionString)
             {
                 Configuration = {
                Log = log

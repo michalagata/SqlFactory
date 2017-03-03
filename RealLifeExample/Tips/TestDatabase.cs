@@ -17,8 +17,5 @@ namespace RealLifeExample.Tips
         
         public TestDatabase(string connectionString)
            : base(connectionString) { }
-
-        public TestDatabase(string connectionString, MetaModel mapping)
-           : base(connectionString, mapping) { }
     }
 }

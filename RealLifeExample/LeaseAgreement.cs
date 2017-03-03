@@ -1,10 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
 using AnubisWorks.SQLFactory;
 using RealLifeExample.Tips;
 
