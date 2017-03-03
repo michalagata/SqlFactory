@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
@@ -22,11 +17,7 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public byte[] Picture { get; set; }
 
-      [Association(OtherKey = "CategoryID")]
-      public Collection<Product> Products { get; private set; }
-
-      public Category() {
-         this.Products = new Collection<Product>();
-      }
+      [Association(OtherKey = nameof(Product.CategoryID))]
+      public Collection<Product> Products { get; } = new Collection<Product>();
    }
 }

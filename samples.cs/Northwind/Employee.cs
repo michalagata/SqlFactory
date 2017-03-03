@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
@@ -52,10 +48,10 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public string Extension { get; set; }
 
-      [Column(UpdateCheck = UpdateCheck.Never)]
+      [Column]
       public byte[] Photo { get; set; }
 
-      [Column(UpdateCheck = UpdateCheck.Never)]
+      [Column]
       public string Notes { get; set; }
 
       [Column]
@@ -64,22 +60,16 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public string PhotoPath { get; set; }
 
-      [Association(ThisKey = "ReportsTo", IsForeignKey = true)]
+      [Association(ThisKey = nameof(ReportsTo))]
       public Employee ReportsToEmployee { get; set; }
 
-      [Association(OtherKey = "ReportsTo")]
-      public Collection<Employee> Employees { get; private set; }
+      [Association(OtherKey = nameof(Employee.ReportsTo))]
+      public Collection<Employee> Employees { get; } = new Collection<Employee>();
 
-      [Association(OtherKey = "EmployeeID")]
-      public Collection<EmployeeTerritory> EmployeeTerritories { get; private set; }
+      [Association(OtherKey = nameof(EmployeeTerritory.EmployeeID))]
+      public Collection<EmployeeTerritory> EmployeeTerritories { get; } = new Collection<EmployeeTerritory>();
 
-      [Association(OtherKey = "EmployeeID")]
-      public Collection<Order> Orders { get; private set; }
-
-      public Employee() {
-         this.Employees = new Collection<Employee>();
-         this.EmployeeTerritories = new Collection<EmployeeTerritory>();
-         this.Orders = new Collection<Order>();
-      }
+      [Association(OtherKey = nameof(Order.EmployeeID))]
+      public Collection<Order> Orders { get; } = new Collection<Order>();
    }
 }

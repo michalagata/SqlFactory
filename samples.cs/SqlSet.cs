@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.Data.Common;
-using System.IO;
 using AnubisWorks.SQLFactory.Sample.Northwind;
 
 namespace AnubisWorks.SQLFactory.Sample {
@@ -11,14 +8,7 @@ namespace AnubisWorks.SQLFactory.Sample {
 
       readonly SqlSet<Product> products;
 
-      public SqlSetSamples(DbConnection conn, TextWriter log) {
-
-         var db = new Database(conn) {
-            Configuration = { 
-               Log = log
-            }
-         };
-
+      public SqlSetSamples(Database db) {
          this.products = db.From<Product>("Products");
       }
 

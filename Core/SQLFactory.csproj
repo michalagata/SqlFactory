@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -9,8 +9,10 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
     <AssemblyName>SQLFactory</AssemblyName>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <CodeAnalysisRuleSet>..\SQLFactory.ruleset</CodeAnalysisRuleSet>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnubisWorks' ">
     <DebugType>pdbonly</DebugType>
@@ -19,7 +21,7 @@
     <OutputPath>..\DEPLOYMENT\</OutputPath>
     <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
     <OutputType>Library</OutputType>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <IntermediateOutputPath>obj\Release\net40\</IntermediateOutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -41,10 +43,11 @@
     <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
-    <SignAssembly>true</SignAssembly>
+    <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile></AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>
+    </AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|AnubisWorks'">
     <OutputPath>..\DEPLOYMENT\</OutputPath>
@@ -58,7 +61,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release_BRE|BRE'">
     <OutputPath>..\DEPLOYMENT\</OutputPath>
-    <DefineConstants>TRACE;BRE</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
     <DocumentationFile>..\DEPLOYMENT\SQLFactory.XML</DocumentationFile>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -77,19 +80,24 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Database.cs" />
-    <Compile Include="SqlCommandBuilder.cs" />
     <Compile Include="SQLFactory.cs" />
+    <Compile Include="Mapper.cs" />
+    <Compile Include="Attributes.cs" />
+    <Compile Include="Metadata\Error.cs" />
+    <Compile Include="Metadata\Accessors.cs" />
+    <Compile Include="Metadata\AttributedMetaModel.cs" />
+    <Compile Include="Metadata\MappingSystem.cs" />
+    <Compile Include="Metadata\TypeSystem.cs" />
+    <Compile Include="Metadata\MappingSource.cs" />
+    <Compile Include="Metadata\MetaModel.cs" />
+    <Compile Include="PocoMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SqlBuilder.cs" />
-    <Compile Include="SQLFactory.SqlBuilder.cs" />
     <Compile Include="SqlSet.cs" />
     <Compile Include="SqlTable.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="SQLFactory.Dynamic.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="AnubisWorks.pfx" />
+    <Compile Include="DynamicMapper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

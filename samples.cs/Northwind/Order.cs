@@ -1,10 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Data.Linq;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
@@ -14,7 +9,7 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column(IsPrimaryKey = true, IsDbGenerated = true)]
       public int OrderID { get; set; }
 
-      [Column(CanBeNull = false)]
+      [Column]
       public string CustomerID { get; set; }
 
       [Column]
@@ -53,20 +48,16 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public string ShipCountry { get; set; }
 
-      [Association(OtherKey = "OrderID")]
-      public Collection<OrderDetail> OrderDetails { get; private set; }
+      [Association(OtherKey = nameof(OrderDetail.OrderID))]
+      public Collection<OrderDetail> OrderDetails { get; } = new Collection<OrderDetail>();
 
-      [Association(ThisKey = "CustomerID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(CustomerID))]
       public Customer Customer { get; set; }
 
-      [Association(ThisKey = "EmployeeID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(EmployeeID))]
       public Employee Employee { get; set; }
 
-      [Association(ThisKey = "ShipVia", IsForeignKey = true)]
+      [Association(ThisKey = nameof(ShipVia))]
       public Shipper Shipper { get; set; }
-
-      public Order() {
-         this.OrderDetails = new Collection<OrderDetail>();
-      }
    }
 }

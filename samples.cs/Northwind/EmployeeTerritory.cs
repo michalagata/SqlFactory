@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Data.Linq.Mapping;
-
-namespace AnubisWorks.SQLFactory.Sample.Northwind {
+﻿namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
    [Table(Name = "EmployeeTerritories")]
    public class EmployeeTerritory {
@@ -12,13 +6,13 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column(IsPrimaryKey = true)]
       public int EmployeeID { get; set; }
 
-      [Column(CanBeNull = false, IsPrimaryKey = true)]
+      [Column(IsPrimaryKey = true)]
       public string TerritoryID { get; set; }
 
-      [Association(ThisKey = "EmployeeID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(EmployeeID))]
       public Employee Employee { get; set; }
 
-      [Association(ThisKey = "TerritoryID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(TerritoryID))]
       public Territory Territory { get; set; }
    }
 }

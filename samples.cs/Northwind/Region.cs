@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
@@ -13,14 +8,10 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column(IsPrimaryKey = true)]
       public int RegionID { get; set; }
 
-      [Column(CanBeNull = false)]
+      [Column]
       public string RegionDescription { get; set; }
 
-      [Association(OtherKey = "RegionID")]
-      public Collection<Territory> Territories { get; private set; }
-
-      public Region() {
-         this.Territories = new Collection<Territory>();
-      }
+      [Association(OtherKey = nameof(Territory.RegionID))]
+      public Collection<Territory> Territories { get; } = new Collection<Territory>();
    }
 }

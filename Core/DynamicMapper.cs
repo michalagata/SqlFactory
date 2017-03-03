@@ -1,40 +1,11 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Dynamic;
-using System.IO;
 using System.Reflection;
 
-#if BRE
-namespace BRE.UniFlow.Agat.SQLFactory
-#else
-namespace AnubisWorks.SQLFactory
-#endif
-{
-
-   public static partial class Extensions {
-
-      /// <summary>
-      /// Maps the results of the <paramref name="command"/> to dynamic objects.
-      /// The query is deferred-executed.
-      /// </summary>
-      /// <param name="command">The query command.</param>
-      /// <returns>The results of the query as dynamic objects.</returns>
-      public static IEnumerable<dynamic> Map(this IDbCommand command) {
-         return Map(command, (TextWriter)null);
-      }
-
-      /// <inheritdoc cref="Map(IDbCommand)"/>
-      /// <param name="logger">A <see cref="TextWriter"/> used to log when the command is executed.</param>
-      public static IEnumerable<dynamic> Map(this IDbCommand command, TextWriter logger) {
-
-         var mapper = new DynamicMapper { 
-            Log = logger
-         };
-
-         return Map(command, r => (dynamic)mapper.Map(r), logger);
-      }
-   }
+namespace AnubisWorks.SQLFactory {
 
    partial class Database {
 
@@ -44,14 +15,32 @@ namespace AnubisWorks.SQLFactory
       /// </summary>
       /// <param name="query">The query.</param>
       /// <returns>The results of the query as dynamic objects.</returns>
-      /// <seealso cref="Extensions.Map(IDbCommand, TextWriter)"/>
+
       public IEnumerable<dynamic> Map(SqlBuilder query) {
 
-         var mapper = new DynamicMapper { 
-            Log = this.Log
-         };
+         Mapper mapper = CreateDynamicMapper();
 
-         return Extensions.Map<dynamic>(CreateCommand, query, mapper, this.Log);
+         return Map(query, r => (dynamic)mapper.Map(r));
+      }
+
+      internal Mapper CreateDynamicMapper() {
+
+         return new DynamicMapper {
+            Log = this.Configuration.Log
+         };
+      }
+   }
+
+   partial class SqlSet {
+
+      IEnumerable DynamicMap(bool singleResult) {
+
+         Mapper mapper = this.db.CreateDynamicMapper();
+         mapper.SingleResult = singleResult;
+
+         InitializeMapper(mapper);
+
+         return this.db.Map(GetDefiningQuery(clone: false), r => mapper.Map(r));
       }
    }
 
@@ -76,6 +65,7 @@ namespace AnubisWorks.SQLFactory
       protected override Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo) {
          throw new NotImplementedException();
       }
+
       protected override CollectionNode CreateCollectionNode(Node container, string propertyName) {
          throw new NotSupportedException();
       }
@@ -108,7 +98,7 @@ namespace AnubisWorks.SQLFactory
 
       public static DynamicNode Root() {
 
-         var node = new DynamicNode() {
+         var node = new DynamicNode {
             _IsComplex = true,
          };
 
@@ -135,16 +125,15 @@ namespace AnubisWorks.SQLFactory
 
       private DynamicNode() { }
 
-      private DynamicNode(string propertyName) 
-         : this() {
+      private DynamicNode(string propertyName) {
 
-         if (propertyName == null) throw new ArgumentNullException("propertyName");
-         if (propertyName.Length == 0) throw new ArgumentException("Cannot map column using an empty property name.", "propertyName");
+         if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
+         if (propertyName.Length == 0) throw new ArgumentException("Cannot map column using an empty property name.", nameof(propertyName));
 
          uint nameAsNumber;
 
          if (UInt32.TryParse(propertyName, out nameAsNumber)) {
-            throw new ArgumentException("Cannot use constructor mapping, by using numeric column names, unless you specify the type of the object you want to map to.", "propertyName");
+            throw new ArgumentException("Cannot use constructor mapping, by using numeric column names, unless you specify the type of the object you want to map to.", nameof(propertyName));
          }
 
          this._PropertyName = propertyName;
@@ -160,7 +149,7 @@ namespace AnubisWorks.SQLFactory
 
          object value;
 
-         if (dictionary.TryGetValue(PropertyName, out value)) {
+         if (dictionary.TryGetValue(this.PropertyName, out value)) {
             return value;
          }
 
@@ -168,7 +157,7 @@ namespace AnubisWorks.SQLFactory
       }
 
       protected override void Set(ref object instance, object value, MappingContext context) {
-         ((IDictionary<string, object>)instance)[PropertyName] = value;
+         ((IDictionary<string, object>)instance)[this.PropertyName] = value;
       }
 
       public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr) {

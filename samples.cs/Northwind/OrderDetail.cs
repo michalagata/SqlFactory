@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Data.Linq.Mapping;
-
-namespace AnubisWorks.SQLFactory.Sample.Northwind {
+﻿namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
    [Table(Name = "Order Details")]
    public class OrderDetail {
@@ -24,10 +18,10 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public float Discount { get; set; }
 
-      [Association(ThisKey = "OrderID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(OrderID))]
       public Order Order { get; set; }
 
-      [Association(ThisKey = "ProductID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(ProductID))]
       public Product Product { get; set; }
    }
 }

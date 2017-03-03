@@ -1,19 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
    [Table(Name = "Products")]
-   public class Product {
+   public partial class Product {
 
       [Column(IsPrimaryKey = true, IsDbGenerated = true)]
       public int ProductID { get; set; }
 
-      [Column(CanBeNull = false)]
+      [Column]
       public string ProductName { get; set; }
 
       [Column]
@@ -40,19 +35,13 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public bool Discontinued { get; set; }
 
-      public decimal ValueInStock { get; set; }
+      [Association(OtherKey = nameof(OrderDetail.ProductID))]
+      public Collection<OrderDetail> OrderDetails { get; } = new Collection<OrderDetail>();
 
-      [Association(OtherKey = "ProductID")]
-      public Collection<OrderDetail> OrderDetails { get; private set; }
-
-      [Association(ThisKey = "CategoryID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(CategoryID))]
       public Category Category { get; set; }
 
-      [Association(ThisKey = "SupplierID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(SupplierID))]
       public Supplier Supplier { get; set; }
-
-      public Product() {
-         this.OrderDetails = new Collection<OrderDetail>();
-      }
    }
 }

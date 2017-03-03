@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Xml;
 using AnubisWorks.SQLFactory.Sample.Northwind;
 
 namespace AnubisWorks.SQLFactory.Sample {
@@ -12,13 +10,8 @@ namespace AnubisWorks.SQLFactory.Sample {
 
       readonly Database db;
 
-      public DatabasePocoSamples(string connectionString, TextWriter log) {
-
-         this.db = new Database(connectionString) {
-            Configuration = { 
-               Log = log
-            }
-         };
+      public DatabasePocoSamples(Database db) {
+         this.db = db;
       }
 
       public IEnumerable<Product> SelectWithManyToOne() {
@@ -77,7 +70,7 @@ namespace AnubisWorks.SQLFactory.Sample {
 
          var query = SQL
             .SELECT("1 AS '1'")
-            ._("'http://anubisworks.net' AS Url$1")
+            ._("'http://example.com' AS Url$1")
             ._("15.5 AS Price$1, 'USD' AS Price$2");
 
          return db.Map<MappingToConstructorArgumentsSample>(query)
@@ -88,7 +81,7 @@ namespace AnubisWorks.SQLFactory.Sample {
 
          var query = SQL
             .SELECT("1 AS '1'")
-            ._("'http://anubisworks.net' AS '2$1'")
+            ._("'http://example.com' AS '2$1'")
             ._("15.5 AS '3$1', 'USD' AS '3$2'");
 
          return db.Map<MappingToConstructorArgumentsSample>(query)
@@ -137,5 +130,13 @@ namespace AnubisWorks.SQLFactory.Sample {
          this.Amount = amount;
          this.Currency = currency;
       }
+   }
+}
+
+namespace AnubisWorks.SQLFactory.Sample.Northwind {
+
+   partial class Product {
+
+      public decimal ValueInStock { get; set; }
    }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
@@ -13,7 +8,7 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column(IsPrimaryKey = true, IsDbGenerated = true)]
       public int SupplierID { get; set; }
 
-      [Column(CanBeNull = false)]
+      [Column]
       public string CompanyName { get; set; }
 
       [Column]
@@ -43,11 +38,7 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public string Fax { get; set; }
 
-      [Association(OtherKey = "SupplierID")]
-      public Collection<Product> Products { get; private set; }
-
-      public Supplier() {
-         this.Products = new Collection<Product>();
-      }
+      [Association(OtherKey = nameof(Product.SupplierID))]
+      public Collection<Product> Products { get; } = new Collection<Product>();
    }
 }

@@ -1,32 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Data.Linq.Mapping;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.ObjectModel;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
    [Table(Name = "Territories")]
    public class Territory {
 
-      [Column(CanBeNull = false, IsPrimaryKey = true)]
+      [Column(IsPrimaryKey = true)]
       public string TerritoryID { get; set; }
 
-      [Column(CanBeNull = false)]
+      [Column]
       public string TerritoryDescription { get; set; }
 
       [Column]
       public int RegionID { get; set; }
 
-      [Association(OtherKey = "TerritoryID")]
-      public Collection<EmployeeTerritory> EmployeeTerritories { get; private set; }
+      [Association(OtherKey = nameof(EmployeeTerritory.TerritoryID))]
+      public Collection<EmployeeTerritory> EmployeeTerritories { get; } = new Collection<EmployeeTerritory>();
 
-      [Association(ThisKey = "RegionID", IsForeignKey = true)]
+      [Association(ThisKey = nameof(RegionID))]
       public Region Region { get; set; }
-
-      public Territory() {
-         this.EmployeeTerritories = new Collection<EmployeeTerritory>();
-      }
    }
 }
