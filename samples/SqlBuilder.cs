@@ -1,4 +1,5 @@
 ﻿using System;
+using SQLFactory;
 
 namespace AnubisWorks.SQLFactory.Sample {
 

@@ -1,4 +1,7 @@
-﻿namespace AnubisWorks.SQLFactory.Sample.Northwind {
+﻿using System;
+using SQLFactory;
+
+namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
    public class NorthwindDatabase : Database {
 

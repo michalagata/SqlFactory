@@ -13,6 +13,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyProductAttribute("SQLFactory")]
 [assembly: AssemblyCopyright("(c) 2013-2017 Michael Agata")]
 [assembly: AssemblyTrademarkAttribute("All Rights Reserved!")]
-[assembly: AssemblyVersion("2.0.10.1")]
-[assembly: AssemblyFileVersion("2.0.10.1")]
+[assembly: AssemblyVersion("2.1.10.1")]
+[assembly: AssemblyFileVersion("2.1.10.1")]
 [assembly: GuidAttribute("16C4BF94-695E-4846-B3EE-0A68FDF92087")]

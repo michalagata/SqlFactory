@@ -1,4 +1,7 @@
-﻿namespace AnubisWorks.SQLFactory.Sample.Northwind {
+﻿using System;
+using SQLFactory;
+
+namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
    [Table(Name = "Order Details")]
    public class OrderDetail {

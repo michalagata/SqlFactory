@@ -1,12 +1,14 @@
-﻿using System.Collections.ObjectModel;
+﻿using System;
+using System.Collections.ObjectModel;
+using SQLFactory;
 
 namespace AnubisWorks.SQLFactory.Sample.Northwind {
 
-   [Table(Name = "Suppliers")]
-   public class Supplier {
+   [Table(Name = "Customers")]
+   public class Customer {
 
-      [Column(IsPrimaryKey = true, IsDbGenerated = true)]
-      public int SupplierID { get; set; }
+      [Column(IsPrimaryKey = true)]
+      public string CustomerID { get; set; }
 
       [Column]
       public string CompanyName { get; set; }
@@ -38,7 +40,10 @@ namespace AnubisWorks.SQLFactory.Sample.Northwind {
       [Column]
       public string Fax { get; set; }
 
-      [Association(OtherKey = nameof(Product.SupplierID))]
-      public Collection<Product> Products { get; } = new Collection<Product>();
+      [Association(OtherKey = nameof(CustomerCustomerDemo.CustomerID))]
+      public Collection<CustomerCustomerDemo> CustomerCustomerDemos { get; } = new Collection<CustomerCustomerDemo>();
+
+      [Association(OtherKey = nameof(Order.CustomerID))]
+      public Collection<Order> Orders { get; } = new Collection<Order>();
    }
 }

@@ -1,19 +1,27 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.Linq.Mapping;
+using System.IO;
 using System.Transactions;
 using AnubisWorks.SQLFactory.Sample.Northwind;
 
 namespace AnubisWorks.SQLFactory.Sample {
 
-   public class DatabaseAnnotatedSamples {
+   public class DatabaseMappedSamples {
 
       readonly NorthwindDatabase db;
 
-      public DatabaseAnnotatedSamples(NorthwindDatabase db) {
-         this.db = db;
+      public DatabaseMappedSamples(string connectionString, MetaModel mapping, TextWriter log) {
+
+         this.db = new NorthwindDatabase(connectionString, mapping) {
+            Configuration = { 
+               Log = log
+            }
+         };
       }
 
       public IEnumerable<Product> IncludeManyToOne() {
-
+         
          return db.Products
             .Include("Category")
             .Include("Supplier")
@@ -43,30 +51,30 @@ namespace AnubisWorks.SQLFactory.Sample {
       public Product Find() {
          return db.Products.Find(1);
       }
-
+     
       public void Transactions_AdoNet() {
 
          using (var tx = db.EnsureInTransaction()) {
-            // Connection is automatically opened if not open
+            // Connection AutoOpen()
 
             Transactions_DoWork();
 
             tx.Commit();
          }
-         // Connection is closed if wasn't open
+         // Connection AutoClose()
       }
 
       public void Transactions_TransactionScope() {
 
          using (var tx = new TransactionScope()) {
             using (db.EnsureConnectionOpen()) {
-               // Open connection if not open
+                // Connection AutoOpen()
 
                Transactions_DoWork();
 
                tx.Complete();
             }
-            // Connection is closed if wasn't open
+             // Connection AutoClose()
          }
       }
 
@@ -74,19 +82,24 @@ namespace AnubisWorks.SQLFactory.Sample {
 
          var order = new Order {
             CustomerID = "ALFKI",
-            OrderDetails = {
+            OrderDetails = { 
                new OrderDetail { ProductID = 77, Quantity = 1 },
                new OrderDetail { ProductID = 41, Quantity = 2 }
             }
          };
 
          db.Orders.Add(order);
+         
+         //method 1
+          int ID1 = db.Orders.Find(order).OrderID;
+         //method 2
+         int ID = (int) db.LastInsertId();
 
          order.Freight = 10m;
 
          db.Orders.Update(order);
 
-         // The following line is not needed when cascade delete is configured on the database
+         // If CascadeDelete is not set!!!
          db.OrderDetails.RemoveRange(order.OrderDetails);
 
          db.Orders.Remove(order);

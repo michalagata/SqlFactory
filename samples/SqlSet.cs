@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using SQLFactory;
 using AnubisWorks.SQLFactory.Sample.Northwind;
 
 namespace AnubisWorks.SQLFactory.Sample {
