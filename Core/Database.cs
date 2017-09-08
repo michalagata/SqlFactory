@@ -432,7 +432,7 @@ namespace AnubisWorks.SQLFactory {
          }
 
          command.CommandText = String.Format(CultureInfo.InvariantCulture, commandText, paramPlaceholders);
-
+         command.CommandTimeout = 0;
          return command;
       }
 
