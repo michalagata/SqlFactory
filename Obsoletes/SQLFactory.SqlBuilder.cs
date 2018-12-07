@@ -5,11 +5,7 @@ using System.Data.Common;
 using System.IO;
 using System.Linq;
 
-#if BRE
-namespace BRE.UniFlow.Agat.SQLFactory
-#else
 namespace AnubisWorks.SQLFactory
-#endif
 {
 
    partial class SqlBuilder {

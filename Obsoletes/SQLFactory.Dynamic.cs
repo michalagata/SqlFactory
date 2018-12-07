@@ -5,11 +5,7 @@ using System.Dynamic;
 using System.IO;
 using System.Reflection;
 
-#if BRE
-namespace BRE.UniFlow.Agat.SQLFactory
-#else
 namespace AnubisWorks.SQLFactory
-#endif
 {
 
    public static partial class Extensions {

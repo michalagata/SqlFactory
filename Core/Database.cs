@@ -440,10 +440,16 @@ namespace AnubisWorks.SQLFactory
                 command.Transaction = transaction;
             }
 
-            if (parameters == null || parameters.Length == 0)
-            {
+         int commandTimeout = this.Configuration.CommandTimeout;
+
+         if (commandTimeout > -1) 
+		 {
+            command.CommandTimeout = commandTimeout;
+         }
+
+         if (parameters == null || parameters.Length == 0) 
+			{
                 command.CommandText = commandText;
-                command.CommandTimeout = 0;
                 return command;
             }
 
@@ -895,6 +901,12 @@ namespace AnubisWorks.SQLFactory
         /// </summary>
 
         public TextWriter Log { get; set; }
+
+      /// <summary>
+      /// Specifies a timeout to assign to commands. This setting is ignored if less or equal to -1. The default is -1.
+      /// </summary>
+
+      public int CommandTimeout { get; set; } = -1;
 
         internal SqlDialect SqlDialect { get; set; }
 

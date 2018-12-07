@@ -4,12 +4,7 @@ using System.Data.Linq.Mapping;
 using System.Linq;
 using System.Text;
 
-
-#if BRE
-namespace BRE.UniFlow.Agat.SQLFactory
-#else
 namespace AnubisWorks.SQLFactory
-#endif
 {
     public sealed partial class SqlCommandBuilder<TEntity> where TEntity : class
     {

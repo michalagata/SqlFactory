@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <AssemblyName>SQLFactory</AssemblyName>
+    <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Authors>Michael Agata</Authors>
+    <PackageReleaseNotes>NET core version + conditional fixes</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Core\Attributes.cs" Link="Attributes.cs" />
+    <Compile Include="..\Core\Database.cs" Link="Database.cs" />
+    <Compile Include="..\Core\DynamicMapper.cs" Link="DynamicMapper.cs" />
+    <Compile Include="..\Core\SQLFactory.cs" Link="SQLFactory.cs" />
+    <Compile Include="..\Core\Mapper.cs" Link="Mapper.cs" />
+    <Compile Include="..\Core\Metadata\Accessors.cs" Link="Metadata\Accessors.cs" />
+    <Compile Include="..\Core\Metadata\AttributedMetaModel.cs" Link="Metadata\AttributedMetaModel.cs" />
+    <Compile Include="..\Core\Metadata\Error.cs" Link="Metadata\Error.cs" />
+    <Compile Include="..\Core\Metadata\MappingSource.cs" Link="Metadata\MappingSource.cs" />
+    <Compile Include="..\Core\Metadata\MappingSystem.cs" Link="Metadata\MappingSystem.cs" />
+    <Compile Include="..\Core\Metadata\MetaModel.cs" Link="Metadata\MetaModel.cs" />
+    <Compile Include="..\Core\Metadata\TypeSystem.cs" Link="Metadata\TypeSystem.cs" />
+    <Compile Include="..\Core\PocoMapper.cs" Link="PocoMapper.cs" />
+    <Compile Include="..\Core\Properties\AssemblyInfo.cs" Link="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\Core\SqlBuilder.cs" Link="SqlBuilder.cs" />
+    <Compile Include="..\Core\SqlSet.cs" Link="SqlSet.cs" />
+    <Compile Include="..\Core\SqlTable.cs" Link="SqlTable.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Metadata\" />
+    <Folder Include="Properties\" />
+  </ItemGroup>
+
+</Project>
