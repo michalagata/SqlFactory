@@ -53,7 +53,7 @@ namespace AnubisWorks.SQLFactory.Tests.Querying {
 
             cust1.CustomerID = newId;
 
-            table.Update(cust1, originalId);
+            table.Update(cust1);
 
             Assert.IsTrue(table.ContainsKey(newId));
             Assert.IsFalse(table.ContainsKey(originalId));

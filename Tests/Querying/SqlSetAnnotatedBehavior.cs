@@ -8,29 +8,29 @@ namespace AnubisWorks.SQLFactory.Tests.Querying {
    [TestClass]
    public class SqlSetAnnotatedBehavior {
 
-      [TestMethod]
-      public void Contains() {
+      //[TestMethod]
+      //public void Contains() {
 
-         var db = SqlServerNorthwindDatabase();
+      //   var db = SqlServerNorthwindDatabase();
 
-         SqlSet<SqlSetAnnotated.Model1.Product> table = db.Table<SqlSetAnnotated.Model1.Product>();
+      //   SqlSet<SqlSetAnnotated.Model1.Product> table = db.Table<SqlSetAnnotated.Model1.Product>();
 
-         var prod1 = table.Single("ProductID = 1");
+      //   var prod1 = table.Single("ProductID = 1");
+         
+      //   Assert.IsTrue(table.Contains(prod1));
+      //   Assert.IsFalse(table.Where("ProductID = 2").Contains(prod1));
+      //}
 
-         Assert.IsTrue(table.Contains(prod1));
-         Assert.IsFalse(table.Where("ProductID = 2").Contains(prod1));
-      }
+      //[TestMethod]
+      //public void ContainsKey() {
 
-      [TestMethod]
-      public void ContainsKey() {
+      //   var db = SqlServerNorthwindDatabase();
 
-         var db = SqlServerNorthwindDatabase();
+      //   SqlSet<SqlSetAnnotated.Model1.Product> table = db.Table<SqlSetAnnotated.Model1.Product>();
 
-         SqlSet<SqlSetAnnotated.Model1.Product> table = db.Table<SqlSetAnnotated.Model1.Product>();
-
-         Assert.IsTrue(table.ContainsKey(1));
-         Assert.IsFalse(table.Where("ProductID = 2").ContainsKey(1));
-      }
+      //   Assert.IsTrue(table.ContainsKey(1));
+      //   Assert.IsFalse(table.Where("ProductID = 2").ContainsKey(1));
+      //}
 
       [TestMethod]
       public void Find() {
