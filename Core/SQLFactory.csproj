@@ -2,16 +2,16 @@
   <PropertyGroup>
     <ProjectGuid>{00835184-82D5-4720-8750-F99A7209730A}</ProjectGuid>
     <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
-    <TargetFrameworks>net45;net46;net461;net462;net47;net471;net472;netcoreapp2.2</TargetFrameworks>
+    <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
     <AssemblyTitle>SQLFactory</AssemblyTitle>
     <Company>AnubisWorks</Company>
     <Product>SQLFactory</Product>
     <Copyright>(c) 2013-2018 Michael Agata</Copyright>
-    <AssemblyVersion>2.1.12.17</AssemblyVersion>
-    <FileVersion>2.1.12.17</FileVersion>
+    <AssemblyVersion>2.1.12.18</AssemblyVersion>
+    <FileVersion>2.1.12.18</FileVersion>
     <OutputPath>..\DEPLOYMENT\</OutputPath>
     <NoWarn>1573</NoWarn>
-    <Version>2.1.12.17</Version>
+    <Version>2.1.12.18</Version>
     <Authors>Michael Agata</Authors>
     <Description>SQL mapper, CRUD helper and escalator, empowering relational database usage on code level</Description>
     <PackageReleaseNotes>.net core version + several fixes applied</PackageReleaseNotes>

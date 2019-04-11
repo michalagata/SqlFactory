@@ -16,14 +16,11 @@ using IsolationLevel = System.Data.IsolationLevel;
 
 namespace AnubisWorks.SQLFactory
 {
-
     /// <summary>
     /// Provides simple data access using <see cref="SqlSet"/>, <see cref="SqlBuilder"/> and <see cref="SqlTable&lt;TEntity>"/>.
     /// </summary>
-
     public partial class Database : IDisposable
     {
-
         static readonly ConcurrentDictionary<string, DbProviderFactory> factories = new ConcurrentDictionary<string, DbProviderFactory>();
 
         readonly bool disposeConnection;
@@ -49,10 +46,8 @@ namespace AnubisWorks.SQLFactory
         /// <summary>
         /// Initializes a new instance of the <see cref="Database"/> class.
         /// </summary>
-
         public Database()
         {
-
             string providerInvariantName;
 
             this.Connection = CreateConnection(null, null, out providerInvariantName);
@@ -66,10 +61,8 @@ namespace AnubisWorks.SQLFactory
         /// using the provided connection string.
         /// </summary>
         /// <param name="connectionString">The connection string.</param>
-
         public Database(string connectionString)
         {
-
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             string providerInvariantName;
@@ -86,10 +79,8 @@ namespace AnubisWorks.SQLFactory
         /// </summary>
         /// <param name="connectionString">The connection string.</param>
         /// <param name="providerInvariantName">The provider's invariant name.</param>
-
         public Database(string connectionString, string providerInvariantName)
         {
-
             if (connectionString == null) throw new ArgumentNullException(nameof(connectionString));
 
             string finalProviderInvariantName;
@@ -105,10 +96,8 @@ namespace AnubisWorks.SQLFactory
         /// using the provided connection.
         /// </summary>
         /// <param name="connection">The connection.</param>
-
         public Database(IDbConnection connection)
         {
-
             if (connection == null) throw new ArgumentNullException(nameof(connection));
 
             this.Connection = connection;
@@ -118,13 +107,12 @@ namespace AnubisWorks.SQLFactory
 
         void Initialize(string providerInvariantName)
         {
-
             providerInvariantName = providerInvariantName
-               ?? this.Connection.GetType().Namespace;
+                                    ?? this.Connection.GetType().Namespace;
 
             this.Configuration = new DatabaseConfiguration(
-               providerInvariantName
-               , () => CreateCommandBuilder(providerInvariantName)
+                providerInvariantName
+                , () => CreateCommandBuilder(providerInvariantName)
             );
 
             Initialize2(providerInvariantName);
@@ -134,7 +122,6 @@ namespace AnubisWorks.SQLFactory
 
         static IDbConnection CreateConnection(string connectionString, string callerProviderInvariantName, out string providerInvariantName)
         {
-
             connectionString = connectionString ?? DatabaseConfiguration.DefaultConnectionString;
             providerInvariantName = callerProviderInvariantName ?? DatabaseConfiguration.DefaultProviderInvariantName;
 
@@ -158,7 +145,6 @@ namespace AnubisWorks.SQLFactory
 
         static DbProviderFactory GetProviderFactory(string providerInvariantName)
         {
-
             if (providerInvariantName == null) throw new ArgumentNullException(nameof(providerInvariantName));
 
             DbProviderFactory factory = factories.GetOrAdd(providerInvariantName, n => DbProviderFactories.GetFactory(n));
@@ -168,11 +154,10 @@ namespace AnubisWorks.SQLFactory
 
         DbCommandBuilder CreateCommandBuilder(string providerInvariantName)
         {
-
             DbConnection dbConn = this.Connection as DbConnection;
 
             DbProviderFactory factory = ((dbConn != null) ? DbProviderFactories.GetFactory(dbConn) : null)
-               ?? GetProviderFactory(providerInvariantName);
+                                        ?? GetProviderFactory(providerInvariantName);
 
             return factory.CreateCommandBuilder();
         }
@@ -182,7 +167,6 @@ namespace AnubisWorks.SQLFactory
         /// you can use to close it (if it wasn't open).
         /// </summary>
         /// <returns>An <see cref="IDisposable"/> object to close the connection.</returns>
-        /// <remarks>
         /// Use this method with the <c>using</c> statement in C# or Visual Basic to ensure that a block of code
         /// is always executed with an open connection.
         /// </remarks>
@@ -193,7 +177,6 @@ namespace AnubisWorks.SQLFactory
         /// }
         /// </code>
         /// </example>
-
         public IDisposable EnsureConnectionOpen()
         {
             return new ConnectionHolder(this.Connection);
@@ -207,7 +190,6 @@ namespace AnubisWorks.SQLFactory
         /// A virtual transaction you can use to ensure a code block is always executed in 
         /// a transaction, new or existing.
         /// </returns>
-        /// <remarks>
         /// This method returns a virtual transaction that wraps an existing or new transaction.
         /// If <see cref="Transaction.Current"/> is not null, this method creates a
         /// new <see cref="TransactionScope"/> and returns an <see cref="IDbTransaction"/>
@@ -245,7 +227,6 @@ namespace AnubisWorks.SQLFactory
         /// }
         /// </code>
         /// </remarks>
-
         public IDbTransaction EnsureInTransaction()
         {
             return EnsureInTransaction(IsolationLevel.Unspecified);
@@ -256,7 +237,6 @@ namespace AnubisWorks.SQLFactory
         /// Specifies the isolation level for the transaction. This parameter is ignored when using
         /// an existing transaction.
         /// </param>
-
         public IDbTransaction EnsureInTransaction(IsolationLevel isolationLevel)
         {
             return new WrappedTransaction(this, isolationLevel);
@@ -271,10 +251,8 @@ namespace AnubisWorks.SQLFactory
         /// <param name="exact">true if the number of affected records should exactly match <paramref name="affect"/>; false if a lower number is acceptable.</param>
         /// <returns>The number of affected records.</returns>
         /// <exception cref="ChangeConflictException">The number of affected records is not equal to <paramref name="affect"/>.</exception>
-
         public int Execute(SqlBuilder nonQuery, int affect = -1, bool exact = false)
         {
-
             if (nonQuery == null) throw new ArgumentNullException(nameof(nonQuery));
 
             IDbCommand command = CreateCommand(nonQuery);
@@ -283,7 +261,6 @@ namespace AnubisWorks.SQLFactory
             {
                 using (var tx = (affect > -1 ? EnsureInTransaction() : null))
                 {
-
                     int affectedRecords;
 
                     try
@@ -292,7 +269,6 @@ namespace AnubisWorks.SQLFactory
                     }
                     catch
                     {
-
                         Trace(command, error: true);
                         throw;
                     }
@@ -300,15 +276,13 @@ namespace AnubisWorks.SQLFactory
                     Trace(command, affectedRecords);
 
                     if (tx != null
-                       && affectedRecords != affect)
+                        && affectedRecords != affect)
                     {
-
                         string errorMessage = null;
 
                         if (exact)
                         {
                             errorMessage = String.Format(CultureInfo.InvariantCulture, "The number of affected records should be {0}, the actual number is {1}.", affect, affectedRecords);
-
                         }
                         else if (affectedRecords > affect)
                         {
@@ -337,7 +311,6 @@ namespace AnubisWorks.SQLFactory
         /// <param name="commandText">The command text.</param>
         /// <param name="parameters">The parameters to apply to the command text.</param>
         /// <returns>The number of affected records.</returns>
-
         public int Execute(string commandText, params object[] parameters)
         {
             return Execute(new SqlBuilder(commandText, parameters));
@@ -351,7 +324,6 @@ namespace AnubisWorks.SQLFactory
         /// <param name="query">The query.</param>
         /// <param name="mapper">The delegate for creating <typeparamref name="TResult"/> objects from an <see cref="IDataRecord"/> object.</param>
         /// <returns>The results of the query as <typeparamref name="TResult"/> objects.</returns>
-
         public IEnumerable<TResult> Map<TResult>(SqlBuilder query, Func<IDataRecord, TResult> mapper)
         {
             return new MappingEnumerable<TResult>(CreateCommand(query), mapper, this.Configuration.Log);
@@ -361,15 +333,11 @@ namespace AnubisWorks.SQLFactory
         /// Gets the identity value of the last inserted record.
         /// </summary>
         /// <returns>The identity value of the last inserted record.</returns>
-        /// <remarks>
         /// It is very important to keep the connection open between the last 
         /// command and this one, or else you might get the wrong value.
         /// </remarks>
-
-        [SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Justification = "Operation is expensive.")]
         public virtual object LastInsertId()
         {
-
             if (String.IsNullOrEmpty(this.Configuration.LastInsertIdCommand))
             {
                 throw new InvalidOperationException("Configuration.LastInsertIdCommand cannot be null.");
@@ -393,10 +361,8 @@ namespace AnubisWorks.SQLFactory
         /// is initialized with the <paramref name="sqlBuilder"/>'s string representation, and whose <see cref="IDbCommand.Parameters"/>
         /// property is initialized with the values from the <see cref="SqlBuilder.ParameterValues"/> property of the <paramref name="sqlBuilder"/> parameter.
         /// </returns>
-
         public IDbCommand CreateCommand(SqlBuilder sqlBuilder)
         {
-
             if (sqlBuilder == null) throw new ArgumentNullException(nameof(sqlBuilder));
 
             return CreateCommand(sqlBuilder.ToString(), sqlBuilder.ParameterValues.ToArray());
@@ -421,14 +387,10 @@ namespace AnubisWorks.SQLFactory
         /// is initialized with the <paramref name="commandText"/> parameter, and whose <see cref="IDbCommand.Parameters"/>
         /// property is initialized with the values from the <paramref name="parameters"/> parameter.
         /// </returns>
-        /// <remarks>
         /// <see cref="Transaction"/> is associated with all commands created using this method.
         /// </remarks>
-
-        [SuppressMessage("Microsoft.Security", "CA2100:Review SQL queries for security vulnerabilities")]
-        public IDbCommand CreateCommand(string commandText, params object[] parameters)
+        public virtual IDbCommand CreateCommand(string commandText, params object[] parameters)
         {
-
             if (commandText == null) throw new ArgumentNullException(nameof(commandText));
 
             IDbCommand command = this.Connection.CreateCommand();
@@ -440,15 +402,15 @@ namespace AnubisWorks.SQLFactory
                 command.Transaction = transaction;
             }
 
-         int commandTimeout = this.Configuration.CommandTimeout;
+            int commandTimeout = this.Configuration.CommandTimeout;
 
-         if (commandTimeout > -1) 
-		 {
-            command.CommandTimeout = commandTimeout;
-         }
+            if (commandTimeout > -1)
+            {
+                command.CommandTimeout = commandTimeout;
+            }
 
-         if (parameters == null || parameters.Length == 0) 
-			{
+            if (parameters == null || parameters.Length == 0)
+            {
                 command.CommandText = commandText;
                 return command;
             }
@@ -457,7 +419,6 @@ namespace AnubisWorks.SQLFactory
 
             for (int i = 0; i < paramPlaceholders.Length; i++)
             {
-
                 object paramValue = parameters[i];
 
                 IDataParameter dbParam = paramValue as IDataParameter;
@@ -475,7 +436,7 @@ namespace AnubisWorks.SQLFactory
             }
 
             command.CommandText = String.Format(CultureInfo.InvariantCulture, commandText, paramPlaceholders);
-            command.CommandTimeout = 0;
+
             return command;
         }
 
@@ -485,10 +446,8 @@ namespace AnubisWorks.SQLFactory
         /// </summary>
         /// <param name="unquotedIdentifier">The original unquoted identifier.</param>
         /// <returns>The quoted version of the identifier. Embedded quotes within the identifier are properly escaped.</returns>
-
         public virtual string QuoteIdentifier(string unquotedIdentifier)
         {
-
             if (unquotedIdentifier == null) throw new ArgumentNullException(nameof(unquotedIdentifier));
 
             if (IsQuotedIdentifier(unquotedIdentifier))
@@ -521,7 +480,6 @@ namespace AnubisWorks.SQLFactory
 
         bool IsQuotedIdentifier(string identifier)
         {
-
             if (identifier == null) throw new ArgumentNullException(nameof(identifier));
 
             string quotePrefix = this.Configuration.QuotePrefix;
@@ -533,7 +491,7 @@ namespace AnubisWorks.SQLFactory
             }
 
             return (!String.IsNullOrEmpty(quotePrefix) && identifier.StartsWith(quotePrefix, StringComparison.Ordinal))
-                && (!String.IsNullOrEmpty(quoteSuffix) && identifier.EndsWith(quoteSuffix, StringComparison.Ordinal));
+                   && (!String.IsNullOrEmpty(quoteSuffix) && identifier.EndsWith(quoteSuffix, StringComparison.Ordinal));
         }
 
         internal void Trace(IDbCommand command, int? affectedRecords = null, bool error = false)
@@ -543,12 +501,10 @@ namespace AnubisWorks.SQLFactory
 
         internal static void Trace(IDbCommand command, TextWriter log, int? affectedRecords = null, bool error = false)
         {
-
             if (command == null) throw new ArgumentNullException(nameof(command));
 
             if (log != null)
             {
-
                 log.WriteLine();
 
                 if (error)
@@ -560,12 +516,10 @@ namespace AnubisWorks.SQLFactory
 
                 for (int i = 0; i < command.Parameters.Count; i++)
                 {
-
                     IDbDataParameter param = command.Parameters[i] as IDbDataParameter;
 
                     if (param != null)
                     {
-
                         log.WriteLine("-- {0}: {1} {2} (Size = {3}) [{4}]", param.ParameterName, param.Direction, param.DbType, param.Size, param.Value);
                     }
                 }
@@ -578,14 +532,11 @@ namespace AnubisWorks.SQLFactory
         }
 
         #region IDisposable Members
-
         /// <summary>
         /// Releases all resources used by the current instance of the <see cref="Database"/> class.
         /// </summary>
-
         public void Dispose()
         {
-
             Dispose(true);
             GC.SuppressFinalize(this);
         }
@@ -596,26 +547,20 @@ namespace AnubisWorks.SQLFactory
         /// <param name="disposing">
         /// true if this method is being called due to a call to <see cref="Dispose()"/>; otherwise, false.
         /// </param>
-
         protected virtual void Dispose(bool disposing)
         {
-
             if (disposing)
             {
-
                 if (this.disposeConnection)
                 {
                     this.Connection?.Dispose();
                 }
             }
         }
-
         #endregion
 
         #region Object Members
-
         /// <exclude/>
-
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override bool Equals(object obj)
         {
@@ -623,7 +568,6 @@ namespace AnubisWorks.SQLFactory
         }
 
         /// <exclude/>
-
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override int GetHashCode()
         {
@@ -631,35 +575,28 @@ namespace AnubisWorks.SQLFactory
         }
 
         /// <exclude/>
-
         [EditorBrowsable(EditorBrowsableState.Never)]
-        [SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Justification = "Must match base signature.")]
         public new Type GetType()
         {
             return base.GetType();
         }
 
         /// <exclude/>
-
         [EditorBrowsable(EditorBrowsableState.Never)]
         public override string ToString()
         {
             return base.ToString();
         }
-
         #endregion
 
         #region Nested Types
-
         class ConnectionHolder : IDisposable
         {
-
             readonly IDbConnection conn;
             readonly bool prevStateWasClosed;
 
             public ConnectionHolder(IDbConnection conn)
             {
-
                 if (conn == null) throw new ArgumentNullException(nameof(conn));
 
                 this.conn = conn;
@@ -673,12 +610,10 @@ namespace AnubisWorks.SQLFactory
 
             public void Dispose()
             {
-
                 if (conn != null
-                   && prevStateWasClosed
-                   && conn.State != ConnectionState.Closed)
+                    && prevStateWasClosed
+                    && conn.State != ConnectionState.Closed)
                 {
-
                     conn.Close();
                 }
             }
@@ -686,7 +621,6 @@ namespace AnubisWorks.SQLFactory
 
         class WrappedTransaction : IDbTransaction
         {
-
             readonly Database db;
             readonly IDisposable connHolder;
             readonly IDbTransaction txAdo;
@@ -698,7 +632,6 @@ namespace AnubisWorks.SQLFactory
 
             public WrappedTransaction(Database db, IsolationLevel isolationLevel)
             {
-
                 if (db == null) throw new ArgumentNullException(nameof(db));
 
                 this.db = db;
@@ -711,26 +644,22 @@ namespace AnubisWorks.SQLFactory
 
                 try
                 {
-
                     if (System.Transactions.Transaction.Current != null)
                     {
                         this.txScope = new TransactionScope();
                     }
 
                     if (this.txScope == null
-                       && this.txAdo == null)
+                        && this.txAdo == null)
                     {
-
                         this.db.Transaction = this.db.Connection.BeginTransaction(isolationLevel);
                         this.txAdo = this.db.Transaction;
                         this.db.Configuration.Log?.WriteLine("-- TRANSACTION STARTED");
                         this.txBeganHere = true;
                     }
-
                 }
                 catch
                 {
-
                     this.connHolder.Dispose();
                     throw;
                 }
@@ -738,7 +667,6 @@ namespace AnubisWorks.SQLFactory
 
             public void Commit()
             {
-
                 if (this.txScope != null)
                 {
                     this.txScope.Complete();
@@ -747,12 +675,10 @@ namespace AnubisWorks.SQLFactory
 
                 if (this.txBeganHere)
                 {
-
                     try
                     {
                         this.txAdo.Commit();
                         this.db.Configuration.Log?.WriteLine("-- TRANSACTION COMMITED");
-
                     }
                     finally
                     {
@@ -763,7 +689,6 @@ namespace AnubisWorks.SQLFactory
 
             public void Rollback()
             {
-
                 if (this.txScope != null)
                 {
                     return;
@@ -771,18 +696,15 @@ namespace AnubisWorks.SQLFactory
 
                 if (this.txBeganHere)
                 {
-
                     try
                     {
                         this.txAdo.Rollback();
                         this.db.Configuration.Log?.WriteLine("-- TRANSACTION ROLLED BACK");
-
                     }
                     finally
                     {
                         RemoveTxFromDatabase();
                     }
-
                 }
                 else
                 {
@@ -792,7 +714,6 @@ namespace AnubisWorks.SQLFactory
 
             public void Dispose()
             {
-
                 try
                 {
                     if (this.txScope != null)
@@ -812,7 +733,6 @@ namespace AnubisWorks.SQLFactory
                             RemoveTxFromDatabase();
                         }
                     }
-
                 }
                 finally
                 {
@@ -822,16 +742,13 @@ namespace AnubisWorks.SQLFactory
 
             void RemoveTxFromDatabase()
             {
-
                 if (this.db.Transaction != null
-                   && Object.ReferenceEquals(this.db.Transaction, this.txAdo))
+                    && Object.ReferenceEquals(this.db.Transaction, this.txAdo))
                 {
-
                     this.db.Transaction = null;
                 }
             }
         }
-
         #endregion
     }
 
@@ -839,18 +756,16 @@ namespace AnubisWorks.SQLFactory
     /// Holds configuration options that customize the behavior of <see cref="Database"/>.
     /// This class cannot be instantiated, to get an instance use the <see cref="Database.Configuration"/> property.
     /// </summary>
-
     public sealed partial class DatabaseConfiguration
     {
-
         static readonly Func<DbCommandBuilder, int, string> getParameterNameI =
-           (Func<DbCommandBuilder, int, string>)Delegate.CreateDelegate(typeof(Func<DbCommandBuilder, int, string>), typeof(DbCommandBuilder).GetMethod("GetParameterName", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new[] { typeof(int) }, null));
+            (Func<DbCommandBuilder, int, string>) Delegate.CreateDelegate(typeof(Func<DbCommandBuilder, int, string>), typeof(DbCommandBuilder).GetMethod("GetParameterName", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new[] {typeof(int)}, null));
 
         static readonly Func<DbCommandBuilder, string, string> getParameterNameS =
-           (Func<DbCommandBuilder, string, string>)Delegate.CreateDelegate(typeof(Func<DbCommandBuilder, string, string>), typeof(DbCommandBuilder).GetMethod("GetParameterName", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new[] { typeof(string) }, null));
+            (Func<DbCommandBuilder, string, string>) Delegate.CreateDelegate(typeof(Func<DbCommandBuilder, string, string>), typeof(DbCommandBuilder).GetMethod("GetParameterName", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new[] {typeof(string)}, null));
 
         static readonly Func<DbCommandBuilder, int, string> getParameterPlaceholder =
-           (Func<DbCommandBuilder, int, string>)Delegate.CreateDelegate(typeof(Func<DbCommandBuilder, int, string>), typeof(DbCommandBuilder).GetMethod("GetParameterPlaceholder", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new[] { typeof(int) }, null));
+            (Func<DbCommandBuilder, int, string>) Delegate.CreateDelegate(typeof(Func<DbCommandBuilder, int, string>), typeof(DbCommandBuilder).GetMethod("GetParameterPlaceholder", BindingFlags.Instance | BindingFlags.NonPublic, Type.DefaultBinder, new[] {typeof(int)}, null));
 
         /// <summary>
         /// The connection string to use as default.
@@ -902,17 +817,16 @@ namespace AnubisWorks.SQLFactory
 
         public TextWriter Log { get; set; }
 
-      /// <summary>
-      /// Specifies a timeout to assign to commands. This setting is ignored if less or equal to -1. The default is -1.
-      /// </summary>
+        /// <summary>
+        /// Specifies a timeout to assign to commands. This setting is ignored if less or equal to -1. The default is -1.
+        /// </summary>
 
-      public int CommandTimeout { get; set; } = -1;
+        public int CommandTimeout { get; set; } = -1;
 
         internal SqlDialect SqlDialect { get; set; }
 
         internal DatabaseConfiguration(string providerInvariantName, Func<DbCommandBuilder> cbFn = null)
         {
-
             if (providerInvariantName == null) throw new ArgumentNullException(nameof(providerInvariantName));
 
             switch (providerInvariantName)
@@ -939,15 +853,12 @@ namespace AnubisWorks.SQLFactory
                 default:
 
                     if (providerInvariantName == "System.Data.SqlServerCe"
-                       || providerInvariantName.StartsWith("System.Data.SqlServerCe."))
+                        || providerInvariantName.StartsWith("System.Data.SqlServerCe."))
                     {
-
                         this.SqlDialect = SqlDialect.TSql;
-
                     }
                     else
                     {
-
                         DbCommandBuilder cb = cbFn?.Invoke();
 
                         if (cb != null)
@@ -962,14 +873,12 @@ namespace AnubisWorks.SQLFactory
 
         void Initialize(DbCommandBuilder cb)
         {
-
             string qp = cb.QuotePrefix;
             string qs = cb.QuoteSuffix;
 
             if (!String.IsNullOrEmpty(qp)
-               || !String.IsNullOrEmpty(qs))
+                || !String.IsNullOrEmpty(qs))
             {
-
                 this.QuotePrefix = qp;
                 this.QuoteSuffix = qs;
             }
@@ -980,9 +889,8 @@ namespace AnubisWorks.SQLFactory
             string pPlace = getParameterPlaceholder(cb, 1);
 
             if (!(Object.ReferenceEquals(pName, pPlace)
-               || pName == pPlace))
+                  || pName == pPlace))
             {
-
                 this.ParameterPlaceholderBuilder = (paramName) => pPlace.Replace(pName, paramName);
             }
         }
@@ -999,24 +907,22 @@ namespace AnubisWorks.SQLFactory
     /// occurs when an unexpected number of rows are affected during save. This is usually because the data in the database has
     /// been modified since it was loaded into memory.
     /// </summary>
-
     [Serializable]
     public class ChangeConflictException : Exception
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ChangeConflictException"/> class
         /// with a specified error message.
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
-
         public ChangeConflictException(string message)
-           : base(message) { }
+            : base(message)
+        {
+        }
     }
 
     class MappingEnumerable<TResult> : IEnumerable<TResult>, IEnumerable, IDisposable
     {
-
         IEnumerator<TResult> enumerator;
 
         public MappingEnumerable(IDbCommand command, Func<IDataRecord, TResult> mapper, TextWriter logger = null)
@@ -1026,7 +932,6 @@ namespace AnubisWorks.SQLFactory
 
         public IEnumerator<TResult> GetEnumerator()
         {
-
             IEnumerator<TResult> e = this.enumerator;
 
             if (e == null)
@@ -1050,10 +955,8 @@ namespace AnubisWorks.SQLFactory
         }
 
         #region Nested Types
-
         class Enumerator : IEnumerator<TResult>, IEnumerator, IDisposable
         {
-
             readonly IDbCommand command;
             readonly Func<IDataRecord, TResult> mapper;
             readonly TextWriter logger;
@@ -1063,7 +966,6 @@ namespace AnubisWorks.SQLFactory
 
             public Enumerator(IDbCommand command, Func<IDataRecord, TResult> mapper, TextWriter logger)
             {
-
                 if (command == null) throw new ArgumentNullException(nameof(command));
                 if (mapper == null) throw new ArgumentNullException(nameof(mapper));
 
@@ -1087,21 +989,17 @@ namespace AnubisWorks.SQLFactory
 
             public bool MoveNext()
             {
-
                 if (this.reader == null)
                 {
-
                     PossiblyOpenConnection();
 
                     try
                     {
                         this.reader = this.command.ExecuteReader();
                         Database.Trace(this.command, this.logger, this.reader.RecordsAffected);
-
                     }
                     catch
                     {
-
                         try
                         {
                             Database.Trace(this.command, this.logger, error: true);
@@ -1128,11 +1026,9 @@ namespace AnubisWorks.SQLFactory
                         this.Current = this.mapper(this.reader);
                         return true;
                     }
-
                 }
                 catch
                 {
-
                     PossiblyCloseConnection();
                     throw;
                 }
@@ -1149,7 +1045,6 @@ namespace AnubisWorks.SQLFactory
 
             public void Dispose()
             {
-
                 this.reader?.Dispose();
 
                 PossiblyCloseConnection();
@@ -1157,7 +1052,6 @@ namespace AnubisWorks.SQLFactory
 
             void PossiblyOpenConnection()
             {
-
                 if (this.prevStateWasClosed)
                 {
                     this.command.Connection.Open();
@@ -1166,10 +1060,8 @@ namespace AnubisWorks.SQLFactory
 
             void PossiblyCloseConnection()
             {
-
                 if (this.prevStateWasClosed)
                 {
-
                     IDbConnection conn = this.command.Connection;
 
                     if (conn.State != ConnectionState.Closed)
@@ -1179,7 +1071,6 @@ namespace AnubisWorks.SQLFactory
                 }
             }
         }
-
         #endregion
     }
 }
