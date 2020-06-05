@@ -2,7 +2,7 @@
   <PropertyGroup>
     <ProjectGuid>{00835184-82D5-4720-8750-F99A7209730A}</ProjectGuid>
     <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
-    <TargetFrameworks>net45;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netstandard2.1</TargetFrameworks>
     <AssemblyTitle>SQLFactory</AssemblyTitle>
     <Company>AnubisWorks</Company>
     <Product>SQLFactory</Product>
@@ -25,9 +25,6 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
   </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System.Transactions" />
-  </ItemGroup>
 <!--  <ItemGroup>
     <Compile Remove="obj\Debug\TemporaryGeneratedFile_036C0B5B-1481-4323-8D20-8F5ADCB23D92.cs" />
     <Compile Remove="obj\Debug\TemporaryGeneratedFile_5937a670-0e60-4077-877b-f7221da3dda1.cs" />
