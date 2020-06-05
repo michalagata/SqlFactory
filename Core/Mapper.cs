@@ -8,567 +8,525 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 
-namespace AnubisWorks.SQLFactory
-{
-    partial class SqlSet
-    {
-        IDictionary<string[], CollectionLoader> _ManyIncludes;
+namespace AnubisWorks.SQLFactory {
 
-        private IDictionary<string[], CollectionLoader> ManyIncludes
-        {
-            get { return _ManyIncludes; }
-            set
-            {
-                if (_ManyIncludes != null)
-                {
-                    throw new InvalidOperationException();
-                }
+   partial class SqlSet {
 
-                _ManyIncludes = value;
+      IDictionary<string[], CollectionLoader> _ManyIncludes;
+
+      private IDictionary<string[], CollectionLoader> ManyIncludes {
+         get { return _ManyIncludes; }
+         set {
+            if (_ManyIncludes != null) {
+               throw new InvalidOperationException();
             }
-        }
+            _ManyIncludes = value;
+         }
+      }
 
-        partial void Initialize2(SqlSet set)
-        {
-            if (set.ManyIncludes != null)
-            {
-                this.ManyIncludes = new Dictionary<string[], CollectionLoader>(set.ManyIncludes);
-            }
+      partial void Initialize2(SqlSet set) {
 
-            Initialize3(set);
-        }
+         if (set.ManyIncludes != null) {
+            this.ManyIncludes = new Dictionary<string[], CollectionLoader>(set.ManyIncludes);
+         }
 
-        partial void Initialize3(SqlSet set);
+         Initialize3(set);
+      }
 
-        void InitializeMapper(Mapper mapper)
-        {
-            mapper.ManyIncludes = this.ManyIncludes;
+      partial void Initialize3(SqlSet set);
 
-            InitializeMapper2(mapper);
-        }
+      void InitializeMapper(Mapper mapper) {
 
-        partial void InitializeMapper2(Mapper mapper);
-    }
+         mapper.ManyIncludes = this.ManyIncludes;
 
-    abstract class Mapper
-    {
-        Node rootNode;
-        IDictionary<CollectionNode, CollectionLoader> manyLoaders;
+         InitializeMapper2(mapper);
+      }
 
-        public TextWriter Log { get; set; }
+      partial void InitializeMapper2(Mapper mapper);
+   }
 
-        public IDictionary<string[], CollectionLoader> ManyIncludes { get; set; }
+   abstract class Mapper {
 
-        public bool SingleResult { get; set; }
+      Node rootNode;
+      IDictionary<CollectionNode, CollectionLoader> manyLoaders;
 
-        protected Mapper()
-        {
-        }
+      public TextWriter Log { get; set; }
 
-        void ReadMapping(IDataRecord record, Node rootNode)
-        {
-            MapGroup[] groups =
-                (from i in Enumerable.Range(0, record.FieldCount)
-                    let columnName = record.GetName(i)
-                    let path = columnName.Split('$')
-                    let property = (path.Length == 1) ? columnName : path[path.Length - 1]
-                    let assoc = (path.Length == 1) ? "" : path[path.Length - 2]
-                    let parent = (path.Length <= 2) ? "" : path[path.Length - 3]
-                    let propertyInfo = new {ColumnOrdinal = i, PropertyName = property}
-                    group propertyInfo by new {depth = path.Length - 1, parent, assoc}
-                    into t
-                    orderby t.Key.depth, t.Key.parent, t.Key.assoc
-                    select new MapGroup
-                    {
-                        Depth = t.Key.depth,
-                        Name = t.Key.assoc,
-                        Parent = t.Key.parent,
-                        Properties = t.ToDictionary(p => p.ColumnOrdinal, p => p.PropertyName)
-                    }
-                ).ToArray();
+      public IDictionary<string[], CollectionLoader> ManyIncludes { get; set; }
 
-            MapGroup topGroup = groups.Where(m => m.Depth == 0).SingleOrDefault()
-                                ?? new MapGroup {Name = "", Parent = "", Properties = new Dictionary<int, string>()};
+      public bool SingleResult { get; set; }
 
-            ReadMapping(record, groups, topGroup, rootNode);
-        }
+      protected Mapper() { }
 
-        void ReadMapping(IDataRecord record, MapGroup[] groups, MapGroup currentGroup, Node instance)
-        {
-            var constructorParameters = new Dictionary<MapParam, Node>();
+      void ReadMapping(IDataRecord record, Node rootNode) {
 
-            foreach (var pair in currentGroup.Properties)
-            {
-                Node property = CreateSimpleProperty(instance, pair.Value, pair.Key);
+         MapGroup[] groups =
+            (from i in Enumerable.Range(0, record.FieldCount)
+             let columnName = record.GetName(i)
+             let path = columnName.Split('$')
+             let property = (path.Length == 1) ? columnName : path[path.Length - 1]
+             let assoc = (path.Length == 1) ? "" : path[path.Length - 2]
+             let parent = (path.Length <= 2) ? "" : path[path.Length - 3]
+             let propertyInfo = new { ColumnOrdinal = i, PropertyName = property }
+             group propertyInfo by new { depth = path.Length - 1, parent, assoc } into t
+             orderby t.Key.depth, t.Key.parent, t.Key.assoc
+             select new MapGroup {
+                Depth = t.Key.depth,
+                Name = t.Key.assoc,
+                Parent = t.Key.parent,
+                Properties = t.ToDictionary(p => p.ColumnOrdinal, p => p.PropertyName)
+             }
+            ).ToArray();
 
-                if (property != null)
-                {
-                    property.Container = instance;
-                    instance.Properties.Add(property);
-                    continue;
-                }
+         MapGroup topGroup = groups.Where(m => m.Depth == 0).SingleOrDefault()
+            ?? new MapGroup { Name = "", Parent = "", Properties = new Dictionary<int, string>() };
 
-                uint valueAsNumber;
+         ReadMapping(record, groups, topGroup, rootNode);
+      }
 
-                if (UInt32.TryParse(pair.Value, out valueAsNumber))
-                {
-                    constructorParameters.Add(new MapParam(valueAsNumber, pair.Key), null);
-                }
-                else
-                {
-                    this.Log?.WriteLine("-- WARNING: Couldn't find property '{0}' on type '{1}'. Ignoring column.", pair.Value, instance.TypeName);
-                }
+      void ReadMapping(IDataRecord record, MapGroup[] groups, MapGroup currentGroup, Node instance) {
+
+         var constructorParameters = new Dictionary<MapParam, Node>();
+
+         foreach (var pair in currentGroup.Properties) {
+
+            Node property = CreateSimpleProperty(instance, pair.Value, pair.Key);
+
+            if (property != null) {
+               property.Container = instance;
+               instance.Properties.Add(property);
+               continue;
             }
 
-            MapGroup[] nextLevels =
-                (from m in groups
-                    where m.Depth == currentGroup.Depth + 1 && m.Parent == currentGroup.Name
-                    select m).ToArray();
+            uint valueAsNumber;
 
-            for (int i = 0; i < nextLevels.Length; i++)
-            {
-                MapGroup nextLevel = nextLevels[i];
-                Node property = CreateComplexProperty(instance, nextLevel.Name);
+            if (UInt32.TryParse(pair.Value, out valueAsNumber)) {
+               constructorParameters.Add(new MapParam(valueAsNumber, pair.Key), null);
+            } else {
+               this.Log?.WriteLine("-- WARNING: Couldn't find property '{0}' on type '{1}'. Ignoring column.", pair.Value, instance.TypeName);
+            }
+         }
 
-                if (property != null)
-                {
-                    property.Container = instance;
+         MapGroup[] nextLevels =
+            (from m in groups
+             where m.Depth == currentGroup.Depth + 1 && m.Parent == currentGroup.Name
+             select m).ToArray();
 
-                    ReadMapping(record, groups, nextLevel, property);
+         for (int i = 0; i < nextLevels.Length; i++) {
 
-                    instance.Properties.Add(property);
-                    continue;
-                }
+            MapGroup nextLevel = nextLevels[i];
+            Node property = CreateComplexProperty(instance, nextLevel.Name);
 
-                uint valueAsNumber;
+            if (property != null) {
 
-                if (UInt32.TryParse(nextLevel.Name, out valueAsNumber))
-                {
-                    constructorParameters.Add(new MapParam(valueAsNumber, nextLevel), null);
-                }
-                else
-                {
-                    this.Log?.WriteLine("-- WARNING: Couldn't find property '{0}' on type '{1}'. Ignoring column(s).", nextLevel.Name, instance.TypeName);
-                }
+               property.Container = instance;
+
+               ReadMapping(record, groups, nextLevel, property);
+
+               instance.Properties.Add(property);
+               continue;
             }
 
-            if (constructorParameters.Count > 0)
-            {
-                instance.Constructor = GetConstructor(instance, constructorParameters.Count);
-                ParameterInfo[] parameters = instance.Constructor.GetParameters();
+            uint valueAsNumber;
 
-                int i = 0;
+            if (UInt32.TryParse(nextLevel.Name, out valueAsNumber)) {
+               constructorParameters.Add(new MapParam(valueAsNumber, nextLevel), null);
+            } else {
+               this.Log?.WriteLine("-- WARNING: Couldn't find property '{0}' on type '{1}'. Ignoring column(s).", nextLevel.Name, instance.TypeName);
+            }
+         }
 
-                foreach (var pair in constructorParameters.OrderBy(p => p.Key.ParameterIndex))
-                {
-                    ParameterInfo param = parameters[i];
-                    Node paramNode;
+         if (constructorParameters.Count > 0) {
 
-                    if (pair.Key.ColumnOrdinal.HasValue)
-                    {
-                        paramNode = CreateParameterNode(pair.Key.ColumnOrdinal.Value, param);
-                    }
-                    else
-                    {
-                        paramNode = CreateParameterNode(param);
-                        ReadMapping(record, groups, pair.Key.Group, paramNode);
-                    }
+            instance.Constructor = GetConstructor(instance, constructorParameters.Count);
+            ParameterInfo[] parameters = instance.Constructor.GetParameters();
 
-                    if (instance.ConstructorParameters.ContainsKey(pair.Key.ParameterIndex))
-                    {
-                        var message = new StringBuilder();
-                        message.AppendFormat(CultureInfo.InvariantCulture, "Already specified an argument for parameter '{0}'", param.Name);
+            int i = 0;
 
-                        if (pair.Key.ColumnOrdinal.HasValue)
-                        {
-                            message.AppendFormat(CultureInfo.InvariantCulture, " ('{0}')", record.GetName(pair.Key.ColumnOrdinal.Value));
-                        }
+            foreach (var pair in constructorParameters.OrderBy(p => p.Key.ParameterIndex)) {
 
-                        message.Append(".");
+               ParameterInfo param = parameters[i];
+               Node paramNode;
 
-                        throw new InvalidOperationException(message.ToString());
-                    }
+               if (pair.Key.ColumnOrdinal.HasValue) {
+                  paramNode = CreateParameterNode(pair.Key.ColumnOrdinal.Value, param);
 
-                    instance.ConstructorParameters.Add(pair.Key.ParameterIndex, paramNode);
+               } else {
 
-                    i++;
-                }
+                  paramNode = CreateParameterNode(param);
+                  ReadMapping(record, groups, pair.Key.Group, paramNode);
+               }
+
+               if (instance.ConstructorParameters.ContainsKey(pair.Key.ParameterIndex)) {
+
+                  var message = new StringBuilder();
+                  message.AppendFormat(CultureInfo.InvariantCulture, "Already specified an argument for parameter '{0}'", param.Name);
+
+                  if (pair.Key.ColumnOrdinal.HasValue) {
+                     message.AppendFormat(CultureInfo.InvariantCulture, " ('{0}')", record.GetName(pair.Key.ColumnOrdinal.Value));
+                  }
+
+                  message.Append(".");
+
+                  throw new InvalidOperationException(message.ToString());
+               }
+
+               instance.ConstructorParameters.Add(pair.Key.ParameterIndex, paramNode);
+
+               i++;
+            }
+         }
+
+         if (instance.IsComplex
+            && this.ManyIncludes != null) {
+
+            var includes = this.ManyIncludes
+               .Where(p => p.Key.Length == currentGroup.Depth + 1)
+               .Where(p => {
+
+                  if (instance.Container == null) {
+                     // root node
+                     return true;
+                  }
+
+                  string[] reversedBasePath = p.Key.Take(p.Key.Length - 1).Reverse().ToArray();
+
+                  Node container = instance;
+
+                  for (int i = 0; i < reversedBasePath.Length; i++) {
+
+                     if (container.PropertyName != reversedBasePath[i]) {
+                        return false;
+                     }
+
+                     container = container.Container;
+                  }
+
+                  return true;
+               })
+               .ToArray();
+
+            for (int i = 0; i < includes.Length; i++) {
+
+               var pair = includes[i];
+
+               string name = pair.Key[pair.Key.Length - 1];
+
+               CollectionNode collection = CreateCollectionNode(instance, name);
+
+               if (collection != null) {
+
+                  instance.Collections.Add(collection);
+
+                  if (this.manyLoaders == null) {
+                     this.manyLoaders = new Dictionary<CollectionNode, CollectionLoader>();
+                  }
+
+                  this.manyLoaders.Add(collection, pair.Value);
+               }
+            }
+         }
+      }
+
+      public object Map(IDataRecord record) {
+
+         Node node = GetRootNode(record);
+
+         MappingContext context = CreateMappingContext();
+
+         object instance = node.Create(record, context);
+
+         node.Load(ref instance, record, context);
+
+         return instance;
+      }
+
+      public void Load(ref object instance, IDataRecord record) {
+
+         Node node = GetRootNode(record);
+
+         node.Load(ref instance, record, CreateMappingContext());
+      }
+
+      Node GetRootNode(IDataRecord record) {
+
+         if (this.rootNode == null) {
+            this.rootNode = CreateRootNode();
+            ReadMapping(record, this.rootNode);
+         }
+
+         return this.rootNode;
+      }
+
+      MappingContext CreateMappingContext() {
+
+         return new MappingContext {
+            Log = this.Log,
+            ManyLoaders = this.manyLoaders,
+            SingleResult = this.SingleResult
+         };
+      }
+
+      protected abstract Node CreateRootNode();
+
+      protected abstract Node CreateSimpleProperty(Node container, string propertyName, int columnOrdinal);
+
+      protected abstract Node CreateComplexProperty(Node container, string propertyName);
+
+      protected abstract Node CreateParameterNode(ParameterInfo paramInfo);
+
+      protected abstract Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo);
+
+      protected abstract CollectionNode CreateCollectionNode(Node container, string propertyName);
+
+      static ConstructorInfo GetConstructor(Node node, int parameterLength) {
+
+         ConstructorInfo[] constructors = node
+            .GetConstructors(BindingFlags.Public | BindingFlags.Instance)
+            .Where(c => c.GetParameters().Length == parameterLength)
+            .ToArray();
+
+         if (constructors.Length == 0) {
+            throw new InvalidOperationException(
+               String.Format(CultureInfo.InvariantCulture,
+                  "Couldn't find a public constructor with {0} parameter(s) for type '{1}'.",
+                  parameterLength,
+                  node.TypeName
+               )
+            );
+         }
+
+         if (constructors.Length > 1) {
+            throw new InvalidOperationException(
+               String.Format(CultureInfo.InvariantCulture,
+                  "Found more than one public constructors with {0} parameter(s) for type '{1}'. Please use another constructor.",
+                  parameterLength,
+                  node.TypeName
+               )
+            );
+         }
+
+         return constructors[0];
+      }
+
+      #region Nested Types
+
+      class MapGroup {
+
+         public string Name;
+         public int Depth;
+         public string Parent;
+         public Dictionary<int, string> Properties;
+      }
+
+      class MapParam {
+
+         public readonly uint ParameterIndex;
+         public readonly int? ColumnOrdinal;
+         public readonly MapGroup Group;
+
+         public MapParam(uint parameterIndex, int columnOrdinal) {
+
+            this.ParameterIndex = parameterIndex;
+            this.ColumnOrdinal = columnOrdinal;
+         }
+
+         public MapParam(uint parameterIndex, MapGroup group) {
+
+            this.ParameterIndex = parameterIndex;
+            this.Group = group;
+         }
+      }
+
+      #endregion
+   }
+
+   abstract class Node {
+
+      Dictionary<uint, Node> _ConstructorParameters;
+      List<Node> _Properties;
+      List<CollectionNode> _Collections;
+
+      public abstract bool IsComplex { get; }
+      public abstract string PropertyName { get; }
+      public abstract int ColumnOrdinal { get; }
+      public abstract string TypeName { get; }
+
+      public Node Container { get; internal set; }
+      public ConstructorInfo Constructor { get; internal set; }
+
+      public Dictionary<uint, Node> ConstructorParameters {
+         get {
+            return _ConstructorParameters
+               ?? (_ConstructorParameters = new Dictionary<uint, Node>());
+         }
+      }
+
+      public List<Node> Properties {
+         get {
+            return _Properties
+               ?? (_Properties = new List<Node>());
+         }
+      }
+
+      public List<CollectionNode> Collections {
+         get {
+            return _Collections
+               ?? (_Collections = new List<CollectionNode>());
+         }
+      }
+
+      public bool HasConstructorParameters {
+         get {
+            return _ConstructorParameters != null
+               && _ConstructorParameters.Count > 0;
+         }
+      }
+
+      public bool HasProperties {
+         get {
+            return _Properties != null
+               && _Properties.Count > 0;
+         }
+      }
+
+      public bool HasCollections {
+         get {
+            return _Collections != null
+               && _Collections.Count > 0;
+         }
+      }
+
+      public object Map(IDataRecord record, MappingContext context) {
+
+         if (this.IsComplex) {
+            return MapComplex(record, context);
+         }
+
+         return MapSimple(record, context);
+      }
+
+      protected virtual object MapComplex(IDataRecord record, MappingContext context) {
+
+         if (AllColumnsNull(record)) {
+            return null;
+         }
+
+         object value = Create(record, context);
+         Load(ref value, record, context);
+
+         return value;
+      }
+
+      bool AllColumnsNull(IDataRecord record) {
+
+         if (this.IsComplex) {
+
+            return (!this.HasConstructorParameters
+                  || this.ConstructorParameters
+                     .OrderBy(n => n.Value.IsComplex)
+                     .All(n => n.Value.AllColumnsNull(record)))
+               && this.Properties
+                  .OrderBy(n => n.IsComplex)
+                  .All(n => n.AllColumnsNull(record));
+         }
+
+         return record.IsDBNull(this.ColumnOrdinal);
+      }
+
+      protected virtual object MapSimple(IDataRecord record, MappingContext context) {
+
+         bool isNull = record.IsDBNull(this.ColumnOrdinal);
+         object value = (isNull) ? null : record.GetValue(this.ColumnOrdinal);
+
+         return value;
+      }
+
+      public abstract object Create(IDataRecord record, MappingContext context);
+
+      public void Load(ref object instance, IDataRecord record, MappingContext context) {
+
+         for (int i = 0; i < this.Properties.Count; i++) {
+
+            Node childNode = this.Properties[i];
+
+            if (!childNode.IsComplex
+               || childNode.HasConstructorParameters) {
+
+               childNode.Read(ref instance, record, context);
+               continue;
             }
 
-            if (instance.IsComplex
-                && this.ManyIncludes != null)
-            {
-                var includes = this.ManyIncludes
-                    .Where(p => p.Key.Length == currentGroup.Depth + 1)
-                    .Where(p =>
-                    {
-                        if (instance.Container == null)
-                        {
-                            // root node
-                            return true;
-                        }
+            object currentValue = childNode.Get(ref instance);
 
-                        string[] reversedBasePath = p.Key.Take(p.Key.Length - 1).Reverse().ToArray();
-
-                        Node container = instance;
-
-                        for (int i = 0; i < reversedBasePath.Length; i++)
-                        {
-                            if (container.PropertyName != reversedBasePath[i])
-                            {
-                                return false;
-                            }
-
-                            container = container.Container;
-                        }
-
-                        return true;
-                    })
-                    .ToArray();
-
-                for (int i = 0; i < includes.Length; i++)
-                {
-                    var pair = includes[i];
-
-                    string name = pair.Key[pair.Key.Length - 1];
-
-                    CollectionNode collection = CreateCollectionNode(instance, name);
-
-                    if (collection != null)
-                    {
-                        instance.Collections.Add(collection);
-
-                        if (this.manyLoaders == null)
-                        {
-                            this.manyLoaders = new Dictionary<CollectionNode, CollectionLoader>();
-                        }
-
-                        this.manyLoaders.Add(collection, pair.Value);
-                    }
-                }
+            if (currentValue != null) {
+               childNode.Load(ref currentValue, record, context);
+            } else {
+               childNode.Read(ref instance, record, context);
             }
-        }
+         }
 
-        public object Map(IDataRecord record)
-        {
-            Node node = GetRootNode(record);
+         if (this.HasCollections) {
 
-            MappingContext context = CreateMappingContext();
+            if (context.SingleResult) {
+               // if the query is expected to return a single result at most
+               // we close the data reader to allow for collections to be loaded
+               // using the same connection (for providers that do not support MARS)
 
-            object instance = node.Create(record, context);
-
-            node.Load(ref instance, record, context);
-
-            return instance;
-        }
-
-        public void Load(ref object instance, IDataRecord record)
-        {
-            Node node = GetRootNode(record);
-
-            node.Load(ref instance, record, CreateMappingContext());
-        }
-
-        Node GetRootNode(IDataRecord record)
-        {
-            if (this.rootNode == null)
-            {
-                this.rootNode = CreateRootNode();
-                ReadMapping(record, this.rootNode);
+               IDataReader reader = record as IDataReader;
+               reader?.Close();
             }
 
-            return this.rootNode;
-        }
+            for (int i = 0; i < this.Collections.Count; i++) {
 
-        MappingContext CreateMappingContext()
-        {
-            return new MappingContext
-            {
-                Log = this.Log,
-                ManyLoaders = this.manyLoaders,
-                SingleResult = this.SingleResult
-            };
-        }
-
-        protected abstract Node CreateRootNode();
-
-        protected abstract Node CreateSimpleProperty(Node container, string propertyName, int columnOrdinal);
-
-        protected abstract Node CreateComplexProperty(Node container, string propertyName);
-
-        protected abstract Node CreateParameterNode(ParameterInfo paramInfo);
-
-        protected abstract Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo);
-
-        protected abstract CollectionNode CreateCollectionNode(Node container, string propertyName);
-
-        static ConstructorInfo GetConstructor(Node node, int parameterLength)
-        {
-            ConstructorInfo[] constructors = node
-                .GetConstructors(BindingFlags.Public | BindingFlags.Instance)
-                .Where(c => c.GetParameters().Length == parameterLength)
-                .ToArray();
-
-            if (constructors.Length == 0)
-            {
-                throw new InvalidOperationException(
-                    String.Format(CultureInfo.InvariantCulture,
-                        "Couldn't find a public constructor with {0} parameter(s) for type '{1}'.",
-                        parameterLength,
-                        node.TypeName
-                    )
-                );
+               CollectionNode collectionNode = this.Collections[i];
+               collectionNode.Load(ref instance, context);
             }
+         }
+      }
 
-            if (constructors.Length > 1)
-            {
-                throw new InvalidOperationException(
-                    String.Format(CultureInfo.InvariantCulture,
-                        "Found more than one public constructors with {0} parameter(s) for type '{1}'. Please use another constructor.",
-                        parameterLength,
-                        node.TypeName
-                    )
-                );
-            }
+      void Read(ref object instance, IDataRecord record, MappingContext context) {
 
-            return constructors[0];
-        }
+         object value = Map(record, context);
+         Set(ref instance, value, context);
+      }
 
-        #region Nested Types
-        class MapGroup
-        {
-            public string Name;
-            public int Depth;
-            public string Parent;
-            public Dictionary<int, string> Properties;
-        }
+      protected abstract object Get(ref object instance);
 
-        class MapParam
-        {
-            public readonly uint ParameterIndex;
-            public readonly int? ColumnOrdinal;
-            public readonly MapGroup Group;
+      protected abstract void Set(ref object instance, object value, MappingContext context);
 
-            public MapParam(uint parameterIndex, int columnOrdinal)
-            {
-                this.ParameterIndex = parameterIndex;
-                this.ColumnOrdinal = columnOrdinal;
-            }
+      public abstract ConstructorInfo[] GetConstructors(BindingFlags bindingAttr);
+   }
 
-            public MapParam(uint parameterIndex, MapGroup group)
-            {
-                this.ParameterIndex = parameterIndex;
-                this.Group = group;
-            }
-        }
-        #endregion
-    }
+   abstract class CollectionNode {
 
-    abstract class Node
-    {
-        Dictionary<uint, Node> _ConstructorParameters;
-        List<Node> _Properties;
-        List<CollectionNode> _Collections;
+      public void Load(ref object instance, MappingContext context) {
 
-        public abstract bool IsComplex { get; }
-        public abstract string PropertyName { get; }
-        public abstract int ColumnOrdinal { get; }
-        public abstract string TypeName { get; }
+         IEnumerable collection = GetOrCreate(ref instance, context);
+         CollectionLoader loader = context.ManyLoaders[this];
 
-        public Node Container { get; internal set; }
-        public ConstructorInfo Constructor { get; internal set; }
+         IEnumerable elements = loader.Load(instance, loader.State);
 
-        public Dictionary<uint, Node> ConstructorParameters
-        {
-            get
-            {
-                return _ConstructorParameters
-                       ?? (_ConstructorParameters = new Dictionary<uint, Node>());
-            }
-        }
+         foreach (object element in elements) {
+            Add(collection, element, context);
+         }
+      }
 
-        public List<Node> Properties
-        {
-            get
-            {
-                return _Properties
-                       ?? (_Properties = new List<Node>());
-            }
-        }
+      protected abstract IEnumerable GetOrCreate(ref object instance, MappingContext context);
 
-        public List<CollectionNode> Collections
-        {
-            get
-            {
-                return _Collections
-                       ?? (_Collections = new List<CollectionNode>());
-            }
-        }
+      protected abstract void Add(IEnumerable collection, object element, MappingContext context);
+   }
 
-        public bool HasConstructorParameters
-        {
-            get
-            {
-                return _ConstructorParameters != null
-                       && _ConstructorParameters.Count > 0;
-            }
-        }
+   class MappingContext {
 
-        public bool HasProperties
-        {
-            get
-            {
-                return _Properties != null
-                       && _Properties.Count > 0;
-            }
-        }
+      public TextWriter Log;
+      public IDictionary<CollectionNode, CollectionLoader> ManyLoaders;
+      public bool SingleResult;
+   }
 
-        public bool HasCollections
-        {
-            get
-            {
-                return _Collections != null
-                       && _Collections.Count > 0;
-            }
-        }
+   class CollectionLoader {
 
-        public object Map(IDataRecord record, MappingContext context)
-        {
-            if (this.IsComplex)
-            {
-                return MapComplex(record, context);
-            }
-
-            return MapSimple(record, context);
-        }
-
-        protected virtual object MapComplex(IDataRecord record, MappingContext context)
-        {
-            if (AllColumnsNull(record))
-            {
-                return null;
-            }
-
-            object value = Create(record, context);
-            Load(ref value, record, context);
-
-            return value;
-        }
-
-        bool AllColumnsNull(IDataRecord record)
-        {
-            if (this.IsComplex)
-            {
-                return (!this.HasConstructorParameters
-                        || this.ConstructorParameters
-                            .OrderBy(n => n.Value.IsComplex)
-                            .All(n => n.Value.AllColumnsNull(record)))
-                       && this.Properties
-                           .OrderBy(n => n.IsComplex)
-                           .All(n => n.AllColumnsNull(record));
-            }
-
-            return record.IsDBNull(this.ColumnOrdinal);
-        }
-
-        protected virtual object MapSimple(IDataRecord record, MappingContext context)
-        {
-            bool isNull = record.IsDBNull(this.ColumnOrdinal);
-            object value = (isNull) ? null : record.GetValue(this.ColumnOrdinal);
-
-            return value;
-        }
-
-        public abstract object Create(IDataRecord record, MappingContext context);
-
-        public void Load(ref object instance, IDataRecord record, MappingContext context)
-        {
-            for (int i = 0; i < this.Properties.Count; i++)
-            {
-                Node childNode = this.Properties[i];
-
-                if (!childNode.IsComplex
-                    || childNode.HasConstructorParameters)
-                {
-                    childNode.Read(ref instance, record, context);
-                    continue;
-                }
-
-                object currentValue = childNode.Get(ref instance);
-
-                if (currentValue != null)
-                {
-                    childNode.Load(ref currentValue, record, context);
-                }
-                else
-                {
-                    childNode.Read(ref instance, record, context);
-                }
-            }
-
-            if (this.HasCollections)
-            {
-                if (context.SingleResult)
-                {
-                    // if the query is expected to return a single result at most
-                    // we close the data reader to allow for collections to be loaded
-                    // using the same connection (for providers that do not support MARS)
-
-                    IDataReader reader = record as IDataReader;
-                    reader?.Close();
-                }
-
-                for (int i = 0; i < this.Collections.Count; i++)
-                {
-                    CollectionNode collectionNode = this.Collections[i];
-                    collectionNode.Load(ref instance, context);
-                }
-            }
-        }
-
-        void Read(ref object instance, IDataRecord record, MappingContext context)
-        {
-            object value = Map(record, context);
-            Set(ref instance, value, context);
-        }
-
-        protected abstract object Get(ref object instance);
-
-        protected abstract void Set(ref object instance, object value, MappingContext context);
-
-        public abstract ConstructorInfo[] GetConstructors(BindingFlags bindingAttr);
-    }
-
-    abstract class CollectionNode
-    {
-        public void Load(ref object instance, MappingContext context)
-        {
-            IEnumerable collection = GetOrCreate(ref instance, context);
-            CollectionLoader loader = context.ManyLoaders[this];
-
-            IEnumerable elements = loader.Load(instance, loader.State);
-
-            foreach (object element in elements)
-            {
-                Add(collection, element, context);
-            }
-        }
-
-        protected abstract IEnumerable GetOrCreate(ref object instance, MappingContext context);
-
-        protected abstract void Add(IEnumerable collection, object element, MappingContext context);
-    }
-
-    class MappingContext
-    {
-        public TextWriter Log;
-        public IDictionary<CollectionNode, CollectionLoader> ManyLoaders;
-        public bool SingleResult;
-    }
-
-    class CollectionLoader
-    {
-        public Func<object, object, IEnumerable> Load;
-        public object State;
-    }
+      public Func<object, object, IEnumerable> Load;
+      public object State;
+   }
 }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnubisWorks.SQLFactory.Tests.Mapping {

@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 
-namespace AnubisWorks.SQLFactory.Metadata
-{
+namespace AnubisWorks.SQLFactory.Metadata {
+
    /// <summary>
    /// Represents a source for mapping information.
    /// </summary>
-    internal abstract class MappingSource
-    {
+
+   internal abstract class MappingSource {
+
       MetaModel primaryModel;
       ReaderWriterLock rwlock;
       Dictionary<Type, MetaModel> secondaryModels;
@@ -17,22 +18,21 @@ namespace AnubisWorks.SQLFactory.Metadata
       /// Gets the MetaModel representing a DataContext and all it's 
       /// accessible tables, functions and entities.
       /// </summary>
-        public MetaModel GetModel(Type dataContextType)
-        {
+
+      public MetaModel GetModel(Type dataContextType) {
+
          if (dataContextType == null) throw Error.ArgumentNull(nameof(dataContextType));
 
          MetaModel model = null;
 
-            if (this.primaryModel == null)
-            {
+         if (this.primaryModel == null) {
             model = CreateModel(dataContextType);
             Interlocked.CompareExchange<MetaModel>(ref this.primaryModel, model, null);
          }
 
          // if the primary one matches, use it!
 
-            if (this.primaryModel.ContextType == dataContextType)
-            {
+         if (this.primaryModel.ContextType == dataContextType) {
             return this.primaryModel;
          }
 
@@ -41,15 +41,13 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          // build a map if one is not already defined
 
-            if (this.secondaryModels == null)
-            {
+         if (this.secondaryModels == null) {
             Interlocked.CompareExchange<Dictionary<Type, MetaModel>>(ref this.secondaryModels, new Dictionary<Type, MetaModel>(), null);
          }
 
          // if we haven't created a read/writer lock, make one now
 
-            if (this.rwlock == null)
-            {
+         if (this.rwlock == null) {
             Interlocked.CompareExchange<ReaderWriterLock>(ref this.rwlock, new ReaderWriterLock(), null);
          }
 
@@ -58,15 +56,11 @@ namespace AnubisWorks.SQLFactory.Metadata
          MetaModel foundModel;
          this.rwlock.AcquireReaderLock(Timeout.Infinite);
 
-            try
-            {
-                if (this.secondaryModels.TryGetValue(dataContextType, out foundModel))
-                {
+         try {
+            if (this.secondaryModels.TryGetValue(dataContextType, out foundModel)) {
                return foundModel;
             }
-            }
-            finally
-            {
+         } finally {
             this.rwlock.ReleaseReaderLock();
          }
 
@@ -74,22 +68,19 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          this.rwlock.AcquireWriterLock(Timeout.Infinite);
 
-            try
-            {
-                if (this.secondaryModels.TryGetValue(dataContextType, out foundModel))
-                {
+         try {
+
+            if (this.secondaryModels.TryGetValue(dataContextType, out foundModel)) {
                return foundModel;
             }
 
-                if (model == null)
-                {
+            if (model == null) {
                model = CreateModel(dataContextType);
             }
 
             this.secondaryModels.Add(dataContextType, model);
-            }
-            finally
-            {
+
+         } finally {
             this.rwlock.ReleaseWriterLock();
          }
 
@@ -109,14 +100,13 @@ namespace AnubisWorks.SQLFactory.Metadata
    /// <summary>
    /// A mapping source that uses attributes on the context to create the mapping model.
    /// </summary>
-    internal sealed class AttributeMappingSource : MappingSource
-    {
-        public AttributeMappingSource()
-        {
-        }
 
-        protected override MetaModel CreateModel(Type dataContextType)
-        {
+   internal sealed class AttributeMappingSource : MappingSource {
+
+      public AttributeMappingSource() { }
+
+      protected override MetaModel CreateModel(Type dataContextType) {
+
          if (dataContextType == null) throw Error.ArgumentNull(nameof(dataContextType));
 
          return new AttributedMetaModel(this, dataContextType);

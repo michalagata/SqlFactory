@@ -5,183 +5,163 @@ using System.Data;
 using System.Dynamic;
 using System.Reflection;
 
-namespace AnubisWorks.SQLFactory
-{
-    partial class Database
-    {
-        /// <summary>
-        /// Maps the results of the <paramref name="query"/> to dynamic objects.
-        /// The query is deferred-executed.
-        /// </summary>
-        /// <param name="query">The query.</param>
-        /// <returns>The results of the query as dynamic objects.</returns>
-        public IEnumerable<dynamic> Map(SqlBuilder query)
-        {
-            Mapper mapper = CreateDynamicMapper();
+namespace AnubisWorks.SQLFactory {
 
-            return Map(query, r => (dynamic) mapper.Map(r));
-        }
+   partial class Database {
 
-        internal Mapper CreateDynamicMapper()
-        {
-            return new DynamicMapper
-            {
-                Log = this.Configuration.Log
-            };
-        }
-    }
+      /// <summary>
+      /// Maps the results of the <paramref name="query"/> to dynamic objects.
+      /// The query is deferred-executed.
+      /// </summary>
+      /// <param name="query">The query.</param>
+      /// <returns>The results of the query as dynamic objects.</returns>
 
-    partial class SqlSet
-    {
-        IEnumerable DynamicMap(bool singleResult)
-        {
-            Mapper mapper = this.db.CreateDynamicMapper();
-            mapper.SingleResult = singleResult;
+      public IEnumerable<dynamic> Map(SqlBuilder query) {
 
-            InitializeMapper(mapper);
+         Mapper mapper = CreateDynamicMapper();
 
-            return this.db.Map(GetDefiningQuery(clone: false), r => mapper.Map(r));
-        }
-    }
+         return Map(query, r => (dynamic)mapper.Map(r));
+      }
 
-    class DynamicMapper : Mapper
-    {
-        protected override Node CreateRootNode()
-        {
-            return DynamicNode.Root();
-        }
+      internal Mapper CreateDynamicMapper() {
 
-        protected override Node CreateSimpleProperty(Node container, string propertyName, int columnOrdinal)
-        {
-            return DynamicNode.Simple(columnOrdinal, propertyName);
-        }
+         return new DynamicMapper {
+            Log = this.Configuration.Log
+         };
+      }
+   }
 
-        protected override Node CreateComplexProperty(Node container, string propertyName)
-        {
-            return DynamicNode.Complex(propertyName);
-        }
+   partial class SqlSet {
 
-        protected override Node CreateParameterNode(ParameterInfo paramInfo)
-        {
-            throw new NotImplementedException();
-        }
+      IEnumerable DynamicMap(bool singleResult) {
 
-        protected override Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo)
-        {
-            throw new NotImplementedException();
-        }
+         Mapper mapper = this.db.CreateDynamicMapper();
+         mapper.SingleResult = singleResult;
 
-        protected override CollectionNode CreateCollectionNode(Node container, string propertyName)
-        {
-            throw new NotSupportedException();
-        }
-    }
+         InitializeMapper(mapper);
 
-    class DynamicNode : Node
-    {
-        static readonly string _TypeName = typeof(ExpandoObject).FullName;
+         return this.db.Map(GetDefiningQuery(clone: false), r => mapper.Map(r));
+      }
+   }
 
-        readonly string _PropertyName;
+   class DynamicMapper : Mapper {
 
-        bool _IsComplex;
-        int _ColumnOrdinal;
+      protected override Node CreateRootNode() {
+         return DynamicNode.Root();
+      }
 
-        public override bool IsComplex
-        {
-            get { return _IsComplex; }
-        }
+      protected override Node CreateSimpleProperty(Node container, string propertyName, int columnOrdinal) {
+         return DynamicNode.Simple(columnOrdinal, propertyName);
+      }
 
-        public override string PropertyName
-        {
-            get { return _PropertyName; }
-        }
+      protected override Node CreateComplexProperty(Node container, string propertyName) {
+         return DynamicNode.Complex(propertyName);
+      }
 
-        public override int ColumnOrdinal
-        {
-            get { return _ColumnOrdinal; }
-        }
+      protected override Node CreateParameterNode(ParameterInfo paramInfo) {
+         throw new NotImplementedException();
+      }
 
-        public override string TypeName
-        {
-            get { return _TypeName; }
-        }
+      protected override Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo) {
+         throw new NotImplementedException();
+      }
 
-        public static DynamicNode Root()
-        {
-            var node = new DynamicNode
-            {
-                _IsComplex = true,
-            };
+      protected override CollectionNode CreateCollectionNode(Node container, string propertyName) {
+         throw new NotSupportedException();
+      }
+   }
 
-            return node;
-        }
+   class DynamicNode : Node {
 
-        public static DynamicNode Complex(string propertyName)
-        {
-            var node = new DynamicNode(propertyName)
-            {
-                _IsComplex = true,
-            };
+      static readonly string _TypeName = typeof(ExpandoObject).FullName;
 
-            return node;
-        }
+      readonly string _PropertyName;
 
-        public static DynamicNode Simple(int columnOrdinal, string propertyName)
-        {
-            var node = new DynamicNode(propertyName)
-            {
-                _ColumnOrdinal = columnOrdinal
-            };
+      bool _IsComplex;
+      int _ColumnOrdinal;
 
-            return node;
-        }
+      public override bool IsComplex {
+         get { return _IsComplex; }
+      }
 
-        private DynamicNode()
-        {
-        }
+      public override string PropertyName {
+         get { return _PropertyName; }
+      }
 
-        private DynamicNode(string propertyName)
-        {
-            if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
-            if (propertyName.Length == 0) throw new ArgumentException("Cannot map column using an empty property name.", nameof(propertyName));
+      public override int ColumnOrdinal {
+         get { return _ColumnOrdinal; }
+      }
 
-            uint nameAsNumber;
+      public override string TypeName {
+         get { return _TypeName; }
+      }
 
-            if (UInt32.TryParse(propertyName, out nameAsNumber))
-            {
-                throw new ArgumentException("Cannot use constructor mapping, by using numeric column names, unless you specify the type of the object you want to map to.", nameof(propertyName));
-            }
+      public static DynamicNode Root() {
 
-            this._PropertyName = propertyName;
-        }
+         var node = new DynamicNode {
+            _IsComplex = true,
+         };
 
-        public override object Create(IDataRecord record, MappingContext context)
-        {
-            return new ExpandoObject();
-        }
+         return node;
+      }
 
-        protected override object Get(ref object instance)
-        {
-            var dictionary = (IDictionary<string, object>) instance;
+      public static DynamicNode Complex(string propertyName) {
 
-            object value;
+         var node = new DynamicNode(propertyName) {
+            _IsComplex = true,
+         };
 
-            if (dictionary.TryGetValue(this.PropertyName, out value))
-            {
-                return value;
-            }
+         return node;
+      }
 
-            return null;
-        }
+      public static DynamicNode Simple(int columnOrdinal, string propertyName) {
 
-        protected override void Set(ref object instance, object value, MappingContext context)
-        {
-            ((IDictionary<string, object>) instance)[this.PropertyName] = value;
-        }
+         var node = new DynamicNode(propertyName) {
+            _ColumnOrdinal = columnOrdinal
+         };
 
-        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
-        {
-            throw new InvalidOperationException("Cannot use constructor mapping, by using numeric column names, unless you specify the type of the object you want to map to.");
-        }
-    }
+         return node;
+      }
+
+      private DynamicNode() { }
+
+      private DynamicNode(string propertyName) {
+
+         if (propertyName == null) throw new ArgumentNullException(nameof(propertyName));
+         if (propertyName.Length == 0) throw new ArgumentException("Cannot map column using an empty property name.", nameof(propertyName));
+
+         uint nameAsNumber;
+
+         if (UInt32.TryParse(propertyName, out nameAsNumber)) {
+            throw new ArgumentException("Cannot use constructor mapping, by using numeric column names, unless you specify the type of the object you want to map to.", nameof(propertyName));
+         }
+
+         this._PropertyName = propertyName;
+      }
+
+      public override object Create(IDataRecord record, MappingContext context) {
+         return new ExpandoObject();
+      }
+
+      protected override object Get(ref object instance) {
+
+         var dictionary = (IDictionary<string, object>)instance;
+
+         object value;
+
+         if (dictionary.TryGetValue(this.PropertyName, out value)) {
+            return value;
+         }
+
+         return null;
+      }
+
+      protected override void Set(ref object instance, object value, MappingContext context) {
+         ((IDictionary<string, object>)instance)[this.PropertyName] = value;
+      }
+
+      public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr) {
+         throw new InvalidOperationException("Cannot use constructor mapping, by using numeric column names, unless you specify the type of the object you want to map to.");
+      }
+   }
 }

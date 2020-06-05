@@ -53,7 +53,7 @@ namespace AnubisWorks.SQLFactory.Tests.Querying {
 
             cust1.CustomerID = newId;
 
-            table.Update(cust1);
+            table.Update(cust1, originalId);
 
             Assert.IsTrue(table.ContainsKey(newId));
             Assert.IsFalse(table.ContainsKey(originalId));
@@ -94,7 +94,7 @@ namespace AnubisWorks.SQLFactory.Tests.Querying {
 
             public NorthwindDatabase()
                : base(SqlServerNorthwindConnection()) { }
-   }
+         }
 
          [Table(Name = "Customers")]
          public class Customer {
@@ -104,7 +104,7 @@ namespace AnubisWorks.SQLFactory.Tests.Querying {
 
             [Column]
             public string CompanyName { get; set; }
-}
+         }
       }
    }
 }

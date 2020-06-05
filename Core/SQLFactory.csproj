@@ -18,6 +18,11 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageTags>orm mapper sql crud factory sqlfactory relational</PackageTags>
   </PropertyGroup>
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+      <_Parameter1>SqlFactory.Tests</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>
     <DefineConstants>TRACE;DEBUG;CODE_ANALYSIS</DefineConstants>

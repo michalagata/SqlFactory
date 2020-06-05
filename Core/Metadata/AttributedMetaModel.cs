@@ -7,10 +7,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 
-namespace AnubisWorks.SQLFactory.Metadata
-{
-    class AttributedMetaModel : MetaModel
-    {
+namespace AnubisWorks.SQLFactory.Metadata {
+
+   class AttributedMetaModel : MetaModel {
+
       ReaderWriterLock @lock = new ReaderWriterLock();
       Dictionary<Type, MetaType> metaTypes;
       Dictionary<Type, MetaTable> metaTables;
@@ -21,9 +21,9 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       internal override string DatabaseName { get; }
 
+      [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+      internal AttributedMetaModel(MappingSource mappingSource, Type contextType) {
 
-        internal AttributedMetaModel(MappingSource mappingSource, Type contextType)
-        {
          this.MappingSource = mappingSource;
          this.ContextType = contextType;
          this.metaTypes = new Dictionary<Type, MetaType>();
@@ -33,83 +33,69 @@ namespace AnubisWorks.SQLFactory.Metadata
          this.DatabaseName = (das != null && das.Length > 0) ? das[0].Name : this.ContextType.Name;
       }
 
-        public override IEnumerable<MetaTable> GetTables()
-        {
+      public override IEnumerable<MetaTable> GetTables() {
+
          @lock.AcquireReaderLock(Timeout.Infinite);
 
-            try
-            {
+         try {
             return this.metaTables.Values.Where(x => x != null).Distinct();
-            }
-            finally
-            {
+         } finally {
             @lock.ReleaseReaderLock();
          }
       }
 
-        public override MetaTable GetTable(Type rowType)
-        {
+      public override MetaTable GetTable(Type rowType) {
+
          if (rowType == null) throw Error.ArgumentNull(nameof(rowType));
 
          MetaTable table;
 
          @lock.AcquireReaderLock(Timeout.Infinite);
 
-            try
-            {
-                if (this.metaTables.TryGetValue(rowType, out table))
-                {
+         try {
+            if (this.metaTables.TryGetValue(rowType, out table)) {
                return table;
             }
-            }
-            finally
-            {
+         } finally {
             @lock.ReleaseReaderLock();
          }
 
          @lock.AcquireWriterLock(Timeout.Infinite);
 
-            try
-            {
+         try {
             table = GetTableNoLocks(rowType);
-            }
-            finally
-            {
+         } finally {
             @lock.ReleaseWriterLock();
          }
 
          return table;
       }
 
-        internal MetaTable GetTableNoLocks(Type rowType)
-        {
+      internal MetaTable GetTableNoLocks(Type rowType) {
+
          MetaTable table;
 
-            if (!this.metaTables.TryGetValue(rowType, out table))
-            {
+         if (!this.metaTables.TryGetValue(rowType, out table)) {
+
             Type root = GetRoot(rowType) ?? rowType;
             TableAttribute[] attrs = (TableAttribute[])root.GetCustomAttributes(typeof(TableAttribute), true);
 
-                if (attrs.Length == 0)
-                {
+            if (attrs.Length == 0) {
                this.metaTables.Add(rowType, null);
-                }
-                else
-                {
-                    if (!this.metaTables.TryGetValue(root, out table))
-                    {
+            } else {
+
+               if (!this.metaTables.TryGetValue(root, out table)) {
+
                   table = new AttributedMetaTable(this, attrs[0], root);
 
-                        foreach (MetaType mt in table.RowType.InheritanceTypes)
-                        {
+                  foreach (MetaType mt in table.RowType.InheritanceTypes) {
                      this.metaTables.Add(mt.Type, table);
                   }
                }
 
                // catch case of derived type that is not part of inheritance
 
-                    if (table.RowType.GetInheritanceType(rowType) == null)
-                    {
+               if (table.RowType.GetInheritanceType(rowType) == null) {
                   this.metaTables.Add(rowType, null);
                   return null;
                }
@@ -119,14 +105,13 @@ namespace AnubisWorks.SQLFactory.Metadata
          return table;
       }
 
-        static Type GetRoot(Type derivedType)
-        {
-            while (derivedType != null && derivedType != typeof(object))
-            {
+      static Type GetRoot(Type derivedType) {
+
+         while (derivedType != null && derivedType != typeof(object)) {
+
             TableAttribute[] attrs = (TableAttribute[])derivedType.GetCustomAttributes(typeof(TableAttribute), false);
 
-                if (attrs.Length > 0)
-                {
+            if (attrs.Length > 0) {
                return derivedType;
             }
 
@@ -136,23 +121,19 @@ namespace AnubisWorks.SQLFactory.Metadata
          return null;
       }
 
-        public override MetaType GetMetaType(Type type)
-        {
+      public override MetaType GetMetaType(Type type) {
+
          if (type == null) throw Error.ArgumentNull(nameof(type));
 
          MetaType mtype = null;
 
          @lock.AcquireReaderLock(Timeout.Infinite);
 
-            try
-            {
-                if (this.metaTypes.TryGetValue(type, out mtype))
-                {
+         try {
+            if (this.metaTypes.TryGetValue(type, out mtype)) {
                return mtype;
             }
-            }
-            finally
-            {
+         } finally {
             @lock.ReleaseReaderLock();
          }
 
@@ -161,23 +142,18 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          MetaTable tab = GetTable(type);
 
-            if (tab != null)
-            {
+         if (tab != null) {
             return tab.RowType.GetInheritanceType(type);
          }
 
          @lock.AcquireWriterLock(Timeout.Infinite);
 
-            try
-            {
-                if (!this.metaTypes.TryGetValue(type, out mtype))
-                {
+         try {
+            if (!this.metaTypes.TryGetValue(type, out mtype)) {
                mtype = new UnmappedType(this, type);
                this.metaTypes.Add(type, mtype);
             }
-            }
-            finally
-            {
+         } finally {
             @lock.ReleaseWriterLock();
          }
 
@@ -185,24 +161,24 @@ namespace AnubisWorks.SQLFactory.Metadata
       }
    }
 
-    sealed class AttributedMetaTable : MetaTable
-    {
+   sealed class AttributedMetaTable : MetaTable {
+
       public override MetaModel Model { get; }
 
       public override string TableName { get; }
 
       public override MetaType RowType { get; }
 
-        internal AttributedMetaTable(AttributedMetaModel model, TableAttribute attr, Type rowType)
-        {
+      internal AttributedMetaTable(AttributedMetaModel model, TableAttribute attr, Type rowType) {
+
          this.Model = model;
          this.TableName = String.IsNullOrEmpty(attr.Name) ? rowType.Name : attr.Name;
          this.RowType = new AttributedRootType(model, this, rowType);
       }
    }
 
-    sealed class AttributedRootType : AttributedMetaType
-    {
+   sealed class AttributedRootType : AttributedMetaType {
+
       Dictionary<Type, MetaType> types;
       Dictionary<object, MetaType> codeMap;
 
@@ -213,20 +189,18 @@ namespace AnubisWorks.SQLFactory.Metadata
       internal override MetaType InheritanceDefault { get; }
 
       internal AttributedRootType(AttributedMetaModel model, AttributedMetaTable table, Type type)
-            : base(model, table, type, null)
-        {
+         : base(model, table, type, null) {
+
          // check for inheritance and create all other types
          InheritanceMappingAttribute[] inheritanceInfo = (InheritanceMappingAttribute[])type.GetCustomAttributes(typeof(InheritanceMappingAttribute), true);
 
-            if (inheritanceInfo.Length > 0)
-            {
-                if (this.Discriminator == null)
-                {
+         if (inheritanceInfo.Length > 0) {
+
+            if (this.Discriminator == null) {
                throw Error.NoDiscriminatorFound(type);
             }
 
-                if (!MappingSystem.IsSupportedDiscriminatorType(this.Discriminator.Type))
-                {
+            if (!MappingSystem.IsSupportedDiscriminatorType(this.Discriminator.Type)) {
                throw Error.DiscriminatorClrTypeNotSupported(this.Discriminator.DeclaringType.Name, this.Discriminator.Name, this.Discriminator.Type);
             }
 
@@ -236,35 +210,31 @@ namespace AnubisWorks.SQLFactory.Metadata
 
             // initialize inheritance types
 
-                foreach (InheritanceMappingAttribute attr in inheritanceInfo)
-                {
-                    if (!type.IsAssignableFrom(attr.Type))
-                    {
+            foreach (InheritanceMappingAttribute attr in inheritanceInfo) {
+
+               if (!type.IsAssignableFrom(attr.Type)) {
                   throw Error.InheritanceTypeDoesNotDeriveFromRoot(attr.Type, type);
                }
 
-                    if (attr.Type.IsAbstract)
-                    {
+               if (attr.Type.IsAbstract) {
                   throw Error.AbstractClassAssignInheritanceDiscriminator(attr.Type);
                }
 
                AttributedMetaType mt = this.CreateInheritedType(type, attr.Type);
 
-                    if (attr.Code == null)
-                    {
+               if (attr.Code == null) {
                   throw Error.InheritanceCodeMayNotBeNull();
                }
 
-                    if (mt.inheritanceCode != null)
-                    {
+               if (mt.inheritanceCode != null) {
                   throw Error.InheritanceTypeHasMultipleDiscriminators(attr.Type);
                }
 
                //object codeValue = DBConvert.ChangeType(*/attr.Code/*, this.Discriminator.Type);
                object codeValue = attr.Code;
 
-                    foreach (object d in codeMap.Keys)
-                    {
+               foreach (object d in codeMap.Keys) {
+
                   // if the keys are equal, or if they are both strings containing only spaces
                   // they are considered equal
 
@@ -272,8 +242,8 @@ namespace AnubisWorks.SQLFactory.Metadata
                         && ((string)codeValue).Trim().Length == 0
                         && d.GetType() == typeof(string)
                         && ((string)d).Trim().Length == 0)
-                            || object.Equals(d, codeValue))
-                        {
+                     || object.Equals(d, codeValue)) {
+
                      throw Error.InheritanceCodeUsedForMultipleTypes(codeValue);
                   }
                }
@@ -281,10 +251,9 @@ namespace AnubisWorks.SQLFactory.Metadata
                mt.inheritanceCode = codeValue;
                this.codeMap.Add(codeValue, mt);
 
-                    if (attr.IsDefault)
-                    {
-                        if (this.InheritanceDefault != null)
-                        {
+               if (attr.IsDefault) {
+
+                  if (this.InheritanceDefault != null) {
                      throw Error.InheritanceTypeHasMultipleDefaults(type);
                   }
 
@@ -292,67 +261,57 @@ namespace AnubisWorks.SQLFactory.Metadata
                }
             }
 
-                if (this.InheritanceDefault == null)
-                {
+            if (this.InheritanceDefault == null) {
                throw Error.InheritanceHierarchyDoesNotDefineDefault(type);
             }
          }
 
-            if (this.types != null)
-            {
+         if (this.types != null) {
             this.InheritanceTypes = this.types.Values.ToList().AsReadOnly();
-            }
-            else
-            {
+         } else {
             this.InheritanceTypes = new MetaType[] { this }.ToList().AsReadOnly();
          }
 
          Validate();
       }
 
-        void Validate()
-        {
+      void Validate() {
+
          Dictionary<object, string> memberToColumn = new Dictionary<object, string>();
 
-            foreach (MetaType type in this.InheritanceTypes)
-            {
-                if (type != this)
-                {
+         foreach (MetaType type in this.InheritanceTypes) {
+
+            if (type != this) {
+
                TableAttribute[] attrs = (TableAttribute[])type.Type.GetCustomAttributes(typeof(TableAttribute), false);
 
-                    if (attrs.Length > 0)
-                    {
+               if (attrs.Length > 0) {
                   throw Error.InheritanceSubTypeIsAlsoRoot(type.Type);
                }
             }
 
-                foreach (MetaDataMember mem in type.PersistentDataMembers)
-                {
-                    if (mem.IsDeclaredBy(type))
-                    {
-                        if (mem.IsDiscriminator && !this.HasInheritance)
-                        {
+            foreach (MetaDataMember mem in type.PersistentDataMembers) {
+
+               if (mem.IsDeclaredBy(type)) {
+
+                  if (mem.IsDiscriminator && !this.HasInheritance) {
                      throw Error.NonInheritanceClassHasDiscriminator(type);
                   }
 
-                        if (!mem.IsAssociation)
-                        {
+                  if (!mem.IsAssociation) {
+
                      // validate that no database column is mapped twice
 
-                            if (!String.IsNullOrEmpty(mem.MappedName))
-                            {
+                     if (!String.IsNullOrEmpty(mem.MappedName)) {
+
                         string column;
                         object dn = InheritanceRules.DistinguishedMemberName(mem.Member);
 
-                                if (memberToColumn.TryGetValue(dn, out column))
-                                {
-                                    if (column != mem.MappedName)
-                                    {
+                        if (memberToColumn.TryGetValue(dn, out column)) {
+                           if (column != mem.MappedName) {
                               throw Error.MemberMappedMoreThanOnce(mem.Member.Name);
                            }
-                                }
-                                else
-                                {
+                        } else {
                            memberToColumn.Add(dn, mem.MappedName);
                         }
                      }
@@ -362,17 +321,16 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        AttributedMetaType CreateInheritedType(Type root, Type type)
-        {
+      AttributedMetaType CreateInheritedType(Type root, Type type) {
+
          MetaType metaType;
 
-            if (!this.types.TryGetValue(type, out metaType))
-            {
+         if (!this.types.TryGetValue(type, out metaType)) {
+
             metaType = new AttributedMetaType(this.Model, this.Table, type, this);
             this.types.Add(type, metaType);
 
-                if (type != root && type.BaseType != typeof(object))
-                {
+            if (type != root && type.BaseType != typeof(object)) {
                CreateInheritedType(root, type.BaseType);
             }
          }
@@ -380,17 +338,15 @@ namespace AnubisWorks.SQLFactory.Metadata
          return (AttributedMetaType)metaType;
       }
 
-        internal override MetaType GetInheritanceType(Type type)
-        {
-            if (type == this.Type)
-            {
+      internal override MetaType GetInheritanceType(Type type) {
+
+         if (type == this.Type) {
             return this;
          }
 
          MetaType metaType = null;
 
-            if (this.types != null)
-            {
+         if (this.types != null) {
             this.types.TryGetValue(type, out metaType);
          }
 
@@ -398,8 +354,8 @@ namespace AnubisWorks.SQLFactory.Metadata
       }
    }
 
-    class AttributedMetaType : MetaType
-    {
+   class AttributedMetaType : MetaType {
+
       Dictionary<MetaPosition, MetaDataMember> dataMemberMap;
       ReadOnlyCollection<MetaDataMember> dataMembers;
       ReadOnlyCollection<MetaAssociation> associations;
@@ -438,18 +394,14 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override ReadOnlyCollection<MetaDataMember> IdentityMembers { get; }
 
-        public override ReadOnlyCollection<MetaAssociation> Associations
-        {
-            get
-            {
+      public override ReadOnlyCollection<MetaAssociation> Associations {
+         get {
+
             // LOCKING: Associations are late-expanded so that cycles are broken.
 
-                if (associations == null)
-                {
-                    lock (locktarget)
-                    {
-                        if (associations == null)
-                        {
+            if (associations == null) {
+               lock (locktarget) {
+                  if (associations == null) {
                      associations = DataMembers.Where(m => m.IsAssociation)
                         .Select(m => m.Association)
                         .ToList()
@@ -478,19 +430,16 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       internal override ReadOnlyCollection<MetaType> InheritanceTypes => InheritanceRoot.InheritanceTypes;
 
-        internal override MetaType InheritanceBase
-        {
-            get
-            {
+      internal override MetaType InheritanceBase {
+         get {
+
             // LOCKING: Cannot initialize at construction
 
             if (!inheritanceBaseSet
-                    && inheritanceBase == null)
-                {
-                    lock (locktarget)
-                    {
-                        if (inheritanceBase == null)
-                        {
+               && inheritanceBase == null) {
+
+               lock (locktarget) {
+                  if (inheritanceBase == null) {
                      inheritanceBase = InheritanceBaseFinder.FindBase(this);
                      inheritanceBaseSet = true;
                   }
@@ -501,25 +450,20 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        internal override ReadOnlyCollection<MetaType> DerivedTypes
-        {
-            get
-            {
+      internal override ReadOnlyCollection<MetaType> DerivedTypes {
+         get {
+
             // LOCKING: Cannot initialize at construction because derived types
             // won't exist yet.
 
-                if (derivedTypes == null)
-                {
-                    lock (locktarget)
-                    {
-                        if (derivedTypes == null)
-                        {
+            if (derivedTypes == null) {
+               lock (locktarget) {
+                  if (derivedTypes == null) {
+
                      var dTypes = new List<MetaType>();
 
-                            foreach (MetaType mt in InheritanceTypes)
-                            {
-                                if (mt.Type.BaseType == Type)
-                                {
+                     foreach (MetaType mt in InheritanceTypes) {
+                        if (mt.Type.BaseType == Type) {
                            dTypes.Add(mt);
                         }
                      }
@@ -533,9 +477,9 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
+      [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+      internal AttributedMetaType(MetaModel model, MetaTable table, Type type, MetaType inheritanceRoot) {
 
-        internal AttributedMetaType(MetaModel model, MetaTable table, Type type, MetaType inheritanceRoot)
-        {
          this.Model = model;
          this.Table = table;
          this.Type = type;
@@ -550,22 +494,22 @@ namespace AnubisWorks.SQLFactory.Metadata
          this.PersistentDataMembers = this.DataMembers.Where(m => m.IsPersistent).ToList().AsReadOnly();
       }
 
-        void ValidatePrimaryKeyMember(MetaDataMember mm)
-        {
+      void ValidatePrimaryKeyMember(MetaDataMember mm) {
+
          //if the type is a sub-type, no member declared in the type can be primary key
 
          if (mm.IsPrimaryKey
             && this.InheritanceRoot != this
-                && mm.Member.DeclaringType == this.Type)
-            {
+            && mm.Member.DeclaringType == this.Type) {
+
             throw (Error.PrimaryKeyInSubTypeNotSupported(this.Type.Name, mm.Name));
          }
       }
 
-        void InitDataMembers()
-        {
-            if (this.dataMembers == null)
-            {
+      void InitDataMembers() {
+
+         if (this.dataMembers == null) {
+
             this.dataMemberMap = new Dictionary<MetaPosition, MetaDataMember>();
 
             int ordinal = 0;
@@ -573,17 +517,16 @@ namespace AnubisWorks.SQLFactory.Metadata
 
             FieldInfo[] fis = TypeSystem.GetAllFields(this.Type, flags).ToArray();
 
-                if (fis != null)
-                {
-                    for (int i = 0, n = fis.Length; i < n; i++)
-                    {
+            if (fis != null) {
+
+               for (int i = 0, n = fis.Length; i < n; i++) {
+
                   FieldInfo fi = fis[i];
                   MetaDataMember mm = new AttributedMetaDataMember(this, fi, ordinal);
                   ValidatePrimaryKeyMember(mm);
 
                   // must be public or persistent
-                        if (!mm.IsPersistent && !fi.IsPublic)
-                        {
+                  if (!mm.IsPersistent && !fi.IsPublic) {
                      continue;
                   }
 
@@ -592,8 +535,7 @@ namespace AnubisWorks.SQLFactory.Metadata
 
                   // must be persistent for the rest
 
-                        if (!mm.IsPersistent)
-                        {
+                  if (!mm.IsPersistent) {
                      continue;
                   }
 
@@ -603,10 +545,10 @@ namespace AnubisWorks.SQLFactory.Metadata
 
             PropertyInfo[] pis = TypeSystem.GetAllProperties(this.Type, flags).ToArray();
 
-                if (pis != null)
-                {
-                    for (int i = 0, n = pis.Length; i < n; i++)
-                    {
+            if (pis != null) {
+
+               for (int i = 0, n = pis.Length; i < n; i++) {
+
                   PropertyInfo pi = pis[i];
                   MetaDataMember mm = new AttributedMetaDataMember(this, pi, ordinal);
                   ValidatePrimaryKeyMember(mm);
@@ -617,8 +559,7 @@ namespace AnubisWorks.SQLFactory.Metadata
                      (pi.CanRead && pi.GetGetMethod(false) != null)
                         && (!pi.CanWrite || pi.GetSetMethod(false) != null);
 
-                        if (!mm.IsPersistent && !isPublic)
-                        {
+                  if (!mm.IsPersistent && !isPublic) {
                      continue;
                   }
 
@@ -627,8 +568,7 @@ namespace AnubisWorks.SQLFactory.Metadata
 
                   // must be persistent for the rest
 
-                        if (!mm.IsPersistent)
-                        {
+                  if (!mm.IsPersistent) {
                      continue;
                   }
 
@@ -640,17 +580,16 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        void InitSpecialMember(MetaDataMember mm)
-        {
+      void InitSpecialMember(MetaDataMember mm) {
+
          // Can only have one auto gen member that is also an identity member,
          // except if that member is a computed column (since they are implicitly auto gen)
 
          if (mm.IsDbGenerated
             && mm.IsPrimaryKey
-                && String.IsNullOrEmpty(mm.Expression))
-            {
-                if (this.dbGeneratedIdentity != null)
-                {
+            && String.IsNullOrEmpty(mm.Expression)) {
+
+            if (this.dbGeneratedIdentity != null) {
                throw Error.TwoMembersMarkedAsPrimaryKeyAndDBGenerated(mm.Member, this.dbGeneratedIdentity.Member);
             }
 
@@ -658,25 +597,23 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
 
          if (mm.IsPrimaryKey
-                && !MappingSystem.IsSupportedIdentityType(mm.Type))
-            {
+            && !MappingSystem.IsSupportedIdentityType(mm.Type)) {
+
             throw Error.IdentityClrTypeNotSupported(mm.DeclaringType, mm.Name, mm.Type);
          }
 
-            if (mm.IsVersion)
-            {
-                if (this.version != null)
-                {
+         if (mm.IsVersion) {
+
+            if (this.version != null) {
                throw Error.TwoMembersMarkedAsRowVersion(mm.Member, this.version.Member);
             }
 
             this.version = mm;
          }
 
-            if (mm.IsDiscriminator)
-            {
-                if (this.discriminator != null)
-                {
+         if (mm.IsDiscriminator) {
+
+            if (this.discriminator != null) {
                throw Error.TwoMembersMarkedAsInheritanceDiscriminator(mm.Member, this.discriminator.Member);
             }
 
@@ -684,22 +621,20 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        public override MetaDataMember GetDataMember(MemberInfo mi)
-        {
+      public override MetaDataMember GetDataMember(MemberInfo mi) {
+
          if (mi == null) throw Error.ArgumentNull(nameof(mi));
 
          MetaDataMember mm = null;
 
-            if (this.dataMemberMap.TryGetValue(new MetaPosition(mi), out mm))
-            {
+         if (this.dataMemberMap.TryGetValue(new MetaPosition(mi), out mm)) {
             return mm;
          }
 
          // DON'T look to see if we are trying to get a member from an inherited type.
          // The calling code should know to look in the inherited type.
 
-            if (mi.DeclaringType.IsInterface)
-            {
+         if (mi.DeclaringType.IsInterface) {
             throw Error.MappingOfInterfacesMemberIsNotSupported(mi.DeclaringType.Name, mi.Name);
          }
 
@@ -708,36 +643,32 @@ namespace AnubisWorks.SQLFactory.Metadata
          throw Error.UnmappedClassMember(mi.DeclaringType.Name, mi.Name);
       }
 
-        internal override MetaType GetInheritanceType(Type inheritanceType)
-        {
-            if (inheritanceType == this.Type)
-            {
+      internal override MetaType GetInheritanceType(Type inheritanceType) {
+
+         if (inheritanceType == this.Type) {
             return this;
          }
 
          return this.InheritanceRoot.GetInheritanceType(inheritanceType);
       }
 
-        internal override MetaType GetTypeForInheritanceCode(object key)
-        {
-            if (this.InheritanceRoot.Discriminator.Type == typeof(string))
-            {
+      internal override MetaType GetTypeForInheritanceCode(object key) {
+
+         if (this.InheritanceRoot.Discriminator.Type == typeof(string)) {
+
             string skey = (string)key;
 
-                foreach (MetaType mt in this.InheritanceRoot.InheritanceTypes)
-                {
-                    if (String.Compare((string) mt.InheritanceCode, skey, StringComparison.OrdinalIgnoreCase) == 0)
-                    {
+            foreach (MetaType mt in this.InheritanceRoot.InheritanceTypes) {
+
+               if (String.Compare((string)mt.InheritanceCode, skey, StringComparison.OrdinalIgnoreCase) == 0) {
                   return mt;
                }
             }
-            }
-            else
-            {
-                foreach (MetaType mt in this.InheritanceRoot.InheritanceTypes)
-                {
-                    if (Object.Equals(mt.InheritanceCode, key))
-                    {
+
+         } else {
+
+            foreach (MetaType mt in this.InheritanceRoot.InheritanceTypes) {
+               if (Object.Equals(mt.InheritanceCode, key)) {
                   return mt;
                }
             }
@@ -746,14 +677,13 @@ namespace AnubisWorks.SQLFactory.Metadata
          return null;
       }
 
-        public override string ToString()
-        {
+      public override string ToString() {
          return this.Name;
       }
    }
 
-    sealed class AttributedMetaDataMember : MetaDataMember
-    {
+   sealed class AttributedMetaDataMember : MetaDataMember {
+
       Type memberDeclaringType;
       bool hasAccessors;
       MetaAccessor accPublic;
@@ -802,44 +732,35 @@ namespace AnubisWorks.SQLFactory.Metadata
       /// member is computed or generated by the database server.
       /// </summary>
 
-        public override bool IsDbGenerated
-        {
-            get
-            {
+      public override bool IsDbGenerated {
+         get {
             return attrColumn != null &&
                (attrColumn.IsDbGenerated || !String.IsNullOrEmpty(attrColumn.Expression)) || IsVersion;
          }
       }
 
-        public override MetaAccessor MemberAccessor
-        {
-            get
-            {
+      public override MetaAccessor MemberAccessor {
+         get {
             InitAccessors();
             return accPublic;
          }
       }
 
-        public override MetaAccessor StorageAccessor
-        {
-            get
-            {
+      public override MetaAccessor StorageAccessor {
+         get {
             InitAccessors();
             return accPrivate;
          }
       }
 
-        public override bool CanBeNull
-        {
-            get
-            {
-                if (attrColumn == null)
-                {
+      public override bool CanBeNull {
+         get {
+
+            if (attrColumn == null) {
                return true;
             }
 
-                if (!attrColumn.CanBeNullSet)
-                {
+            if (!attrColumn.CanBeNullSet) {
                return isNullableType || !Type.IsValueType;
             }
 
@@ -847,30 +768,25 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        public override AutoSync AutoSync
-        {
-            get
-            {
-                if (attrColumn != null)
-                {
+      public override AutoSync AutoSync {
+         get {
+            if (attrColumn != null) {
+
                // auto-gen keys are always and only synced on insert
 
-                    if (IsDbGenerated && IsPrimaryKey)
-                    {
+               if (IsDbGenerated && IsPrimaryKey) {
                   return AutoSync.OnInsert;
                }
 
                // if the user has explicitly set it, use their value
 
-                    if (attrColumn.AutoSync != AutoSync.Default)
-                    {
+               if (attrColumn.AutoSync != AutoSync.Default) {
                   return attrColumn.AutoSync;
                }
 
                // database generated members default to always
 
-                    if (IsDbGenerated)
-                    {
+               if (IsDbGenerated) {
                   return AutoSync.Always;
                }
             }
@@ -879,21 +795,17 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        public override MetaAssociation Association
-        {
-            get
-            {
-                if (IsAssociation)
-                {
+      public override MetaAssociation Association {
+         get {
+
+            if (IsAssociation) {
+
                // LOCKING: This deferral isn't an optimization. It can't be done in the constructor
                // because there may be loops in the association graph.
 
-                    if (assoc == null)
-                    {
-                        lock (locktarget)
-                        {
-                            if (assoc == null)
-                            {
+               if (assoc == null) {
+                  lock (locktarget) {
+                     if (assoc == null) {
                         assoc = new AttributedMetaAssociation(this, attrAssoc);
                      }
                   }
@@ -904,8 +816,8 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        internal AttributedMetaDataMember(AttributedMetaType metaType, MemberInfo mi, int ordinal)
-        {
+      internal AttributedMetaDataMember(AttributedMetaType metaType, MemberInfo mi, int ordinal) {
+
          this.memberDeclaringType = mi.DeclaringType;
          this.DeclaringType = metaType;
          this.Member = mi;
@@ -916,12 +828,11 @@ namespace AnubisWorks.SQLFactory.Metadata
          this.attrAssoc = (AssociationAttribute)Attribute.GetCustomAttribute(mi, typeof(AssociationAttribute));
          this.attr = (this.attrColumn != null) ? (IDataAttribute)this.attrColumn : (IDataAttribute)this.attrAssoc;
 
-            if (this.attr != null && this.attr.Storage != null)
-            {
+         if (this.attr != null && this.attr.Storage != null) {
+
             MemberInfo[] mis = mi.DeclaringType.GetMember(this.attr.Storage, BindingFlags.Instance | BindingFlags.NonPublic);
 
-                if (mis == null || mis.Length != 1)
-                {
+            if (mis == null || mis.Length != 1) {
                throw Error.BadStorageProperty(this.attr.Storage, mi.DeclaringType, mi.Name);
             }
 
@@ -932,33 +843,28 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          if (attrColumn != null
             && attrColumn.IsDbGenerated
-                && attrColumn.IsPrimaryKey)
-            {
+            && attrColumn.IsPrimaryKey) {
+
             // auto-gen identities must be synced on insert
 
             if ((attrColumn.AutoSync != AutoSync.Default)
-                    && (attrColumn.AutoSync != AutoSync.OnInsert))
-                {
+               && (attrColumn.AutoSync != AutoSync.OnInsert)) {
+
                throw Error.IncorrectAutoSyncSpecification(mi.Name);
             }
          }
       }
 
-        void InitAccessors()
-        {
-            if (!this.hasAccessors)
-            {
-                lock (this.locktarget)
-                {
-                    if (!this.hasAccessors)
-                    {
-                        if (this.StorageMember != null)
-                        {
+      void InitAccessors() {
+
+         if (!this.hasAccessors) {
+            lock (this.locktarget) {
+               if (!this.hasAccessors) {
+
+                  if (this.StorageMember != null) {
                      this.accPrivate = MakeMemberAccessor(this.Member.ReflectedType, this.StorageMember, null);
                      this.accPublic = MakeMemberAccessor(this.Member.ReflectedType, this.Member, this.accPrivate);
-                        }
-                        else
-                        {
+                  } else {
                      this.accPublic = this.accPrivate = MakeMemberAccessor(this.Member.ReflectedType, this.Member, null);
                   }
 
@@ -968,18 +874,15 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        static MetaAccessor MakeMemberAccessor(Type accessorType, MemberInfo mi, MetaAccessor storage)
-        {
+      static MetaAccessor MakeMemberAccessor(Type accessorType, MemberInfo mi, MetaAccessor storage) {
+
          FieldInfo fi = mi as FieldInfo;
 
          MetaAccessor acc = null;
 
-            if (fi != null)
-            {
+         if (fi != null) {
             acc = FieldAccessor.Create(accessorType, fi);
-            }
-            else
-            {
+         } else {
             PropertyInfo pi = (PropertyInfo)mi;
             acc = PropertyAccessor.Create(accessorType, pi, storage);
          }
@@ -987,21 +890,20 @@ namespace AnubisWorks.SQLFactory.Metadata
          return acc;
       }
 
-        public override bool IsDeclaredBy(MetaType declaringMetaType)
-        {
+      public override bool IsDeclaredBy(MetaType declaringMetaType) {
+
          if (declaringMetaType == null) throw Error.ArgumentNull(nameof(declaringMetaType));
 
          return declaringMetaType.Type == this.memberDeclaringType;
       }
 
-        public override string ToString()
-        {
+      public override string ToString() {
          return this.DeclaringType.ToString() + ":" + this.Member.ToString();
       }
    }
 
-    class AttributedMetaAssociation : MetaAssociationImpl
-    {
+   class AttributedMetaAssociation : MetaAssociationImpl {
+
       public override MetaType OtherType { get; }
 
       public override MetaDataMember ThisMember { get; }
@@ -1028,9 +930,9 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override bool DeleteOnNull { get; }
 
+      [SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+      internal AttributedMetaAssociation(AttributedMetaDataMember member, AssociationAttribute attr) {
 
-        internal AttributedMetaAssociation(AttributedMetaDataMember member, AssociationAttribute attr)
-        {
          this.ThisMember = member;
          this.IsMany = TypeSystem.IsSequenceType(this.ThisMember.Type);
 
@@ -1049,10 +951,9 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          // if any key members are not nullable, the association is not nullable
 
-            foreach (MetaDataMember mm in this.ThisKey)
-            {
-                if (!mm.CanBeNull)
-                {
+         foreach (MetaDataMember mm in this.ThisKey) {
+
+            if (!mm.CanBeNull) {
                this.IsNullable = false;
                break;
             }
@@ -1060,12 +961,11 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          // validate DeleteOnNull specification
 
-            if (this.DeleteOnNull == true)
-            {
+         if (this.DeleteOnNull == true) {
             if (!(this.IsForeignKey
                && !this.IsMany
-                      && !this.IsNullable))
-                {
+               && !this.IsNullable)) {
+
                throw Error.InvalidDeleteOnNullSpecification(member);
             }
          }
@@ -1074,26 +974,26 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          if (this.ThisKey.Count != this.OtherKey.Count
             && this.ThisKey.Count > 0
-                && this.OtherKey.Count > 0)
-            {
+            && this.OtherKey.Count > 0) {
+
             throw Error.MismatchedThisKeyOtherKey(member.Name, member.DeclaringType.Name);
          }
 
          // determine reverse reference member
 
-            foreach (MetaDataMember omm in this.OtherType.PersistentDataMembers)
-            {
+         foreach (MetaDataMember omm in this.OtherType.PersistentDataMembers) {
+
             AssociationAttribute oattr = (AssociationAttribute)Attribute.GetCustomAttribute(omm.Member, typeof(AssociationAttribute));
 
             if (oattr == null
-                    || omm == this.ThisMember)
-                {
+               || omm == this.ThisMember) {
+
                continue;
             }
 
             if (attr.Name != null
-                    && oattr.Name == attr.Name)
-                {
+               && oattr.Name == attr.Name) {
+
                this.OtherMember = omm;
                break;
             }
@@ -1101,8 +1001,7 @@ namespace AnubisWorks.SQLFactory.Metadata
             bool otherMemberIsMany = TypeSystem.IsSequenceType(omm.Type);
             Type otherMemberType = (otherMemberIsMany) ? TypeSystem.GetElementType(omm.Type) : omm.Type;
 
-                if (member.DeclaringType.Type == otherMemberType)
-                {
+            if (member.DeclaringType.Type == otherMemberType) {
                this.OtherMember = omm;
                break;
             }
@@ -1110,35 +1009,34 @@ namespace AnubisWorks.SQLFactory.Metadata
       }
    }
 
-    abstract class MetaAssociationImpl : MetaAssociation
-    {
+   abstract class MetaAssociationImpl : MetaAssociation {
+
       static char[] keySeparators = new char[] { ',' };
 
       /// <summary>
       /// Given a MetaType and a set of key fields, return the set of MetaDataMembers
       /// corresponding to the key.
       /// </summary>
-        protected static ReadOnlyCollection<MetaDataMember> MakeKeys(MetaType mtype, string keyFields)
-        {
+
+      protected static ReadOnlyCollection<MetaDataMember> MakeKeys(MetaType mtype, string keyFields) {
+
          string[] names = keyFields.Split(keySeparators);
 
          var members = new MetaDataMember[names.Length];
 
-            for (int i = 0; i < names.Length; i++)
-            {
+         for (int i = 0; i < names.Length; i++) {
+
             names[i] = names[i].Trim();
 
             MemberInfo[] rmis = mtype.Type.GetMember(names[i], BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
 
-                if (rmis == null || rmis.Length != 1)
-                {
+            if (rmis == null || rmis.Length != 1) {
                throw Error.BadKeyMember(names[i], keyFields, mtype.Name);
             }
 
             members[i] = mtype.GetDataMember(rmis[0]);
 
-                if (members[i] == null)
-                {
+            if (members[i] == null) {
                throw Error.BadKeyMember(names[i], keyFields, mtype.Name);
             }
          }
@@ -1149,24 +1047,21 @@ namespace AnubisWorks.SQLFactory.Metadata
       /// <summary>
       /// Compare two sets of keys for equality.
       /// </summary>
-        protected static bool AreEqual(IEnumerable<MetaDataMember> key1, IEnumerable<MetaDataMember> key2)
-        {
-            using (IEnumerator<MetaDataMember> e1 = key1.GetEnumerator())
-            {
-                using (IEnumerator<MetaDataMember> e2 = key2.GetEnumerator())
-                {
+
+      protected static bool AreEqual(IEnumerable<MetaDataMember> key1, IEnumerable<MetaDataMember> key2) {
+
+         using (IEnumerator<MetaDataMember> e1 = key1.GetEnumerator()) {
+            using (IEnumerator<MetaDataMember> e2 = key2.GetEnumerator()) {
+
                bool m1, m2;
 
-                    for (m1 = e1.MoveNext(), m2 = e2.MoveNext(); m1 && m2; m1 = e1.MoveNext(), m2 = e2.MoveNext())
-                    {
-                        if (e1.Current != e2.Current)
-                        {
+               for (m1 = e1.MoveNext(), m2 = e2.MoveNext(); m1 && m2; m1 = e1.MoveNext(), m2 = e2.MoveNext()) {
+                  if (e1.Current != e2.Current) {
                      return false;
                   }
                }
 
-                    if (m1 != m2)
-                    {
+               if (m1 != m2) {
                   return false;
                }
             }
@@ -1175,14 +1070,13 @@ namespace AnubisWorks.SQLFactory.Metadata
          return true;
       }
 
-        public override string ToString()
-        {
+      public override string ToString() {
          return String.Format(CultureInfo.InvariantCulture, "{0} ->{1} {2}", this.ThisMember.DeclaringType.Name, this.IsMany ? "*" : "", this.OtherType.Name);
       }
    }
 
-    sealed class UnmappedType : MetaType
-    {
+   sealed class UnmappedType : MetaType {
+
       static ReadOnlyCollection<MetaType> _emptyTypes = new List<MetaType>().AsReadOnly();
       static ReadOnlyCollection<MetaDataMember> _emptyDataMembers = new List<MetaDataMember>().AsReadOnly();
       static ReadOnlyCollection<MetaAssociation> _emptyAssociations = new List<MetaAssociation>().AsReadOnly();
@@ -1212,10 +1106,8 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override bool HasUpdateCheck => false;
 
-        public override ReadOnlyCollection<MetaDataMember> DataMembers
-        {
-            get
-            {
+      public override ReadOnlyCollection<MetaDataMember> DataMembers {
+         get {
             InitDataMembers();
             return dataMembers;
          }
@@ -1223,10 +1115,8 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override ReadOnlyCollection<MetaDataMember> PersistentDataMembers => _emptyDataMembers;
 
-        public override ReadOnlyCollection<MetaDataMember> IdentityMembers
-        {
-            get
-            {
+      public override ReadOnlyCollection<MetaDataMember> IdentityMembers {
+         get {
             InitDataMembers();
             return dataMembers;
          }
@@ -1234,16 +1124,12 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override ReadOnlyCollection<MetaAssociation> Associations => _emptyAssociations;
 
-        internal override ReadOnlyCollection<MetaType> InheritanceTypes
-        {
-            get
-            {
-                if (inheritanceTypes == null)
-                {
-                    lock (locktarget)
-                    {
-                        if (inheritanceTypes == null)
-                        {
+      internal override ReadOnlyCollection<MetaType> InheritanceTypes {
+         get {
+
+            if (inheritanceTypes == null) {
+               lock (locktarget) {
+                  if (inheritanceTypes == null) {
                      inheritanceTypes = new MetaType[] { this }.ToList().AsReadOnly();
                   }
                }
@@ -1269,43 +1155,38 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       internal override bool IsInheritanceDefault => false;
 
-        internal UnmappedType(MetaModel model, Type type)
-        {
+      internal UnmappedType(MetaModel model, Type type) {
+
          this.Model = model;
          this.Type = type;
       }
 
-        internal override MetaType GetInheritanceType(Type inheritanceType)
-        {
-            if (inheritanceType == this.Type)
-            {
+      internal override MetaType GetInheritanceType(Type inheritanceType) {
+
+         if (inheritanceType == this.Type) {
             return this;
          }
 
          return null;
       }
 
-        internal override MetaType GetTypeForInheritanceCode(object key)
-        {
+      internal override MetaType GetTypeForInheritanceCode(object key) {
          return null;
       }
 
-        public override MetaDataMember GetDataMember(MemberInfo mi)
-        {
+      public override MetaDataMember GetDataMember(MemberInfo mi) {
+
          if (mi == null) throw Error.ArgumentNull(nameof(mi));
 
          InitDataMembers();
 
-            if (this.dataMemberMap == null)
-            {
-                lock (this.locktarget)
-                {
-                    if (this.dataMemberMap == null)
-                    {
+         if (this.dataMemberMap == null) {
+            lock (this.locktarget) {
+               if (this.dataMemberMap == null) {
+
                   var map = new Dictionary<object, MetaDataMember>();
 
-                        foreach (MetaDataMember mm in this.dataMembers)
-                        {
+                  foreach (MetaDataMember mm in this.dataMembers) {
                      map.Add(InheritanceRules.DistinguishedMemberName(mm.Member), mm);
                   }
 
@@ -1322,28 +1203,24 @@ namespace AnubisWorks.SQLFactory.Metadata
          return mdm;
       }
 
-        void InitDataMembers()
-        {
-            if (this.dataMembers == null)
-            {
-                lock (this.locktarget)
-                {
-                    if (this.dataMembers == null)
-                    {
+      void InitDataMembers() {
+
+         if (this.dataMembers == null) {
+            lock (this.locktarget) {
+               if (this.dataMembers == null) {
+
                   var dMembers = new List<MetaDataMember>();
                   int ordinal = 0;
 
                   BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
 
-                        foreach (FieldInfo fi in this.Type.GetFields(flags))
-                        {
+                  foreach (FieldInfo fi in this.Type.GetFields(flags)) {
                      MetaDataMember mm = new UnmappedDataMember(this, fi, ordinal);
                      dMembers.Add(mm);
                      ordinal++;
                   }
 
-                        foreach (PropertyInfo pi in this.Type.GetProperties(flags))
-                        {
+                  foreach (PropertyInfo pi in this.Type.GetProperties(flags)) {
                      MetaDataMember mm = new UnmappedDataMember(this, pi, ordinal);
                      dMembers.Add(mm);
                      ordinal++;
@@ -1355,14 +1232,13 @@ namespace AnubisWorks.SQLFactory.Metadata
          }
       }
 
-        public override string ToString()
-        {
+      public override string ToString() {
          return this.Name;
       }
    }
 
-    sealed class UnmappedDataMember : MetaDataMember
-    {
+   sealed class UnmappedDataMember : MetaDataMember {
+
       MetaAccessor accPublic;
       object lockTarget = new object();
 
@@ -1380,19 +1256,15 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override string Name => Member.Name;
 
-        public override MetaAccessor MemberAccessor
-        {
-            get
-            {
+      public override MetaAccessor MemberAccessor {
+         get {
             InitAccessors();
             return accPublic;
          }
       }
 
-        public override MetaAccessor StorageAccessor
-        {
-            get
-            {
+      public override MetaAccessor StorageAccessor {
+         get {
             InitAccessors();
             return accPublic;
          }
@@ -1424,46 +1296,40 @@ namespace AnubisWorks.SQLFactory.Metadata
 
       public override MetaAssociation Association => null;
 
-        internal UnmappedDataMember(MetaType declaringType, MemberInfo mi, int ordinal)
-        {
+      internal UnmappedDataMember(MetaType declaringType, MemberInfo mi, int ordinal) {
+
          this.DeclaringType = declaringType;
          this.Member = mi;
          this.Ordinal = ordinal;
          this.Type = TypeSystem.GetMemberType(mi);
       }
 
-        void InitAccessors()
-        {
-            if (this.accPublic == null)
-            {
-                lock (this.lockTarget)
-                {
-                    if (this.accPublic == null)
-                    {
+      void InitAccessors() {
+
+         if (this.accPublic == null) {
+            lock (this.lockTarget) {
+               if (this.accPublic == null) {
                   this.accPublic = MakeMemberAccessor(this.Member.ReflectedType, this.Member);
                }
             }
          }
       }
 
-        public override bool IsDeclaredBy(MetaType metaType)
-        {
+      public override bool IsDeclaredBy(MetaType metaType) {
+
          if (metaType == null) throw Error.ArgumentNull(nameof(metaType));
 
          return metaType.Type == this.Member.DeclaringType;
       }
 
-        static MetaAccessor MakeMemberAccessor(Type accessorType, MemberInfo mi)
-        {
+      static MetaAccessor MakeMemberAccessor(Type accessorType, MemberInfo mi) {
+
          FieldInfo fi = mi as FieldInfo;
          MetaAccessor acc = null;
 
-            if (fi != null)
-            {
+         if (fi != null) {
             acc = FieldAccessor.Create(accessorType, fi);
-            }
-            else
-            {
+         } else {
             PropertyInfo pi = (PropertyInfo)mi;
             acc = PropertyAccessor.Create(accessorType, pi, null);
          }
@@ -1472,12 +1338,11 @@ namespace AnubisWorks.SQLFactory.Metadata
       }
    }
 
-    static class InheritanceBaseFinder
-    {
-        internal static MetaType FindBase(MetaType derivedType)
-        {
-            if (derivedType.Type == typeof(object))
-            {
+   static class InheritanceBaseFinder {
+
+      internal static MetaType FindBase(MetaType derivedType) {
+
+         if (derivedType.Type == typeof(object)) {
             return null;
          }
 
@@ -1486,19 +1351,18 @@ namespace AnubisWorks.SQLFactory.Metadata
          var metaTable = derivedType.Table;
          MetaType metaType = null;
 
-            while (true)
-            {
+         while (true) {
+
             if (clrType == typeof(object)
-                    || clrType == rootClrType)
-                {
+               || clrType == rootClrType) {
+
                return null;
             }
 
             clrType = clrType.BaseType;
             metaType = derivedType.InheritanceRoot.GetInheritanceType(clrType);
 
-                if (metaType != null)
-                {
+            if (metaType != null) {
                return metaType;
             }
          }
@@ -1514,34 +1378,34 @@ namespace AnubisWorks.SQLFactory.Metadata
    ///      to be manually padded in inheritance mapping [InheritanceMapping(Code='x')]. 
    ///  
    /// </summary>
-    static class InheritanceRules
-    {
+
+   static class InheritanceRules {
+
       /// <summary>
       /// Creates a name that is the same when the member should be considered 'same'
       /// for the purposes of the inheritance feature.
       /// </summary>
-        internal static object DistinguishedMemberName(MemberInfo mi)
-        {
+
+      internal static object DistinguishedMemberName(MemberInfo mi) {
+
          PropertyInfo pi = mi as PropertyInfo;
          FieldInfo fi = mi as FieldInfo;
 
-            if (fi != null)
-            {
+         if (fi != null) {
+
             // Human readable variant:
             // return "fi:" + mi.Name + ":" + mi.DeclaringType;
             return new MetaPosition(mi);
-            }
-            else if (pi != null)
-            {
+
+         } else if (pi != null) {
+
             MethodInfo meth = null;
 
-                if (pi.CanRead)
-                {
+            if (pi.CanRead) {
                meth = pi.GetGetMethod();
             }
 
-                if (meth == null && pi.CanWrite)
-                {
+            if (meth == null && pi.CanWrite) {
                meth = pi.GetSetMethod();
             }
 
@@ -1550,17 +1414,13 @@ namespace AnubisWorks.SQLFactory.Metadata
             // Human readable variant:
             // return "pi:" + mi.Name + ":" + (isVirtual ? "virtual" : mi.DeclaringType.ToString());
 
-                if (isVirtual)
-                {
+            if (isVirtual) {
                return mi.Name;
-                }
-                else
-                {
+            } else {
                return new MetaPosition(mi);
             }
-            }
-            else
-            {
+
+         } else {
             throw Error.ArgumentOutOfRange(nameof(mi));
          }
       }
@@ -1568,8 +1428,8 @@ namespace AnubisWorks.SQLFactory.Metadata
       /// <summary>
       /// Compares two MemberInfos for 'same-ness'.
       /// </summary>
-        internal static bool AreSameMember(MemberInfo mi1, MemberInfo mi2)
-        {
+
+      internal static bool AreSameMember(MemberInfo mi1, MemberInfo mi2) {
          return DistinguishedMemberName(mi1).Equals(DistinguishedMemberName(mi2));
       }
    }

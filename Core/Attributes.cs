@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 
-namespace AnubisWorks.SQLFactory
-{
+namespace AnubisWorks.SQLFactory {
+
    [AttributeUsage(AttributeTargets.Class)]
-    sealed class DatabaseAttribute : Attribute
-    {
+   sealed class DatabaseAttribute : Attribute {
+
       public string Name { get; set; }
    }
 
@@ -14,8 +14,8 @@ namespace AnubisWorks.SQLFactory
    /// </summary>
 
    [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-    public sealed class TableAttribute : Attribute
-    {
+   public sealed class TableAttribute : Attribute {
+
       /// <summary>
       /// Gets or sets the name of the table or view.
       /// </summary>
@@ -28,8 +28,8 @@ namespace AnubisWorks.SQLFactory
    /// </summary>
 
    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public sealed class ColumnAttribute : Attribute, IDataAttribute
-    {
+   public sealed class ColumnAttribute : Attribute, IDataAttribute {
+
       bool canBeNull = true;
       bool canBeNullSet = false;
 
@@ -49,7 +49,7 @@ namespace AnubisWorks.SQLFactory
       /// Gets or sets the type of the database column.
       /// </summary>
 
-
+      [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Db", Justification = "Conforms to legacy spelling.")]
       internal string DbType { get; set; }
 
       /// <summary>
@@ -70,7 +70,7 @@ namespace AnubisWorks.SQLFactory
       ///  Gets or sets whether a column contains values that the database auto-generates.
       /// </summary>
 
-
+      [SuppressMessage("Microsoft.Naming", "CA1709:IdentifiersShouldBeCasedCorrectly", MessageId = "Db", Justification = "Conforms to legacy spelling.")]
       public bool IsDbGenerated { get; set; }
 
       /// <summary>
@@ -89,11 +89,9 @@ namespace AnubisWorks.SQLFactory
 
       internal bool IsDiscriminator { get; set; }
 
-        internal bool CanBeNull
-        {
+      internal bool CanBeNull {
          get { return canBeNull; }
-            set
-            {
+         set {
             canBeNullSet = true;
             canBeNull = value;
          }
@@ -102,8 +100,7 @@ namespace AnubisWorks.SQLFactory
       internal bool CanBeNullSet => canBeNullSet;
    }
 
-    internal enum UpdateCheck
-    {
+   internal enum UpdateCheck {
       Always,
       Never,
       WhenChanged
@@ -113,8 +110,9 @@ namespace AnubisWorks.SQLFactory
    /// Used to specify for during INSERT and UPDATE operations when
    /// a data member should be read back after the operation completes.
    /// </summary>
-    public enum AutoSync
-    {
+
+   public enum AutoSync {
+
       /// <summary>
       /// Automatically selects the value.
       /// </summary>
@@ -151,8 +149,8 @@ namespace AnubisWorks.SQLFactory
    /// </summary>
 
    [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property)]
-    public sealed class AssociationAttribute : Attribute, IDataAttribute
-    {
+   public sealed class AssociationAttribute : Attribute, IDataAttribute {
+
       /// <summary>
       /// Gets or sets the name of a constraint.
       /// </summary>
@@ -180,7 +178,7 @@ namespace AnubisWorks.SQLFactory
       /// <summary>
       /// Gets or sets the indication of a uniqueness constraint on the foreign key.
       /// </summary>
-
+      /// <remarks>When true, this property indicates a true 1:1 relationship.</remarks>
 
       internal bool IsUnique { get; set; }
 
@@ -208,8 +206,8 @@ namespace AnubisWorks.SQLFactory
    /// </summary>
 
    [AttributeUsage(AttributeTargets.Class, AllowMultiple = true, Inherited = false)]
-    sealed class InheritanceMappingAttribute : Attribute
-    {
+   sealed class InheritanceMappingAttribute : Attribute {
+
       /// <summary>
       /// Discriminator value in store column for this type.
       /// </summary>
@@ -220,7 +218,7 @@ namespace AnubisWorks.SQLFactory
       /// Type to instantiate when Key is matched.
       /// </summary>
 
-
+      [SuppressMessage("Microsoft.Naming", "CA1721:PropertyNamesShouldNotMatchGetMethods", Justification = "The contexts in which this is available are fairly specific.")]
       public Type Type { get; set; }
 
       /// <summary>
@@ -230,8 +228,8 @@ namespace AnubisWorks.SQLFactory
       public bool IsDefault { get; set; }
    }
 
-    interface IDataAttribute
-    {
+   interface IDataAttribute {
+
       string Name { get; set; }
 
       string Storage { get; set; }

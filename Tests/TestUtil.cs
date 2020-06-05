@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Data.Common;
-using System.Data.SqlClient;
 using System.IO;
 using System.Text.RegularExpressions;
+using Microsoft.Data.SqlClient;
 using MySql.Data.MySqlClient;
 
 namespace AnubisWorks.SQLFactory.Tests {

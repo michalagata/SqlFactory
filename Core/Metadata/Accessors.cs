@@ -3,28 +3,26 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
-namespace AnubisWorks.SQLFactory.Metadata
-{
-    delegate V DGet<T, V>(T t);
+namespace AnubisWorks.SQLFactory.Metadata {
 
+   delegate V DGet<T, V>(T t);
    delegate void DSet<T, V>(T t, V v);
    delegate void DRSet<T, V>(ref T t, V v);
 
-    static class FieldAccessor
-    {
+   static class FieldAccessor {
+
       [MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
-        internal static MetaAccessor Create(Type objectType, FieldInfo fi)
-        {
-            if (!fi.ReflectedType.IsAssignableFrom(objectType))
-            {
+      internal static MetaAccessor Create(Type objectType, FieldInfo fi) {
+
+         if (!fi.ReflectedType.IsAssignableFrom(objectType)) {
             throw Error.InvalidFieldInfo(objectType, fi.FieldType, fi);
          }
 
          Delegate dget = null;
          Delegate drset = null;
 
-            if (!objectType.IsGenericType)
-            {
+         if (!objectType.IsGenericType) {
+
             DynamicMethod mget = new DynamicMethod(
                "xget_" + fi.Name,
                fi.FieldType,
@@ -48,8 +46,7 @@ namespace AnubisWorks.SQLFactory.Metadata
             gen = mset.GetILGenerator();
             gen.Emit(OpCodes.Ldarg_0);
 
-                if (!objectType.IsValueType)
-                {
+            if (!objectType.IsValueType) {
                gen.Emit(OpCodes.Ldind_Ref);
             }
 
@@ -66,47 +63,42 @@ namespace AnubisWorks.SQLFactory.Metadata
          );
       }
 
-        class Accessor<T, V> : MetaAccessor<T, V>
-        {
+      class Accessor<T, V> : MetaAccessor<T, V> {
+
          DGet<T, V> dget;
          DRSet<T, V> drset;
          FieldInfo fi;
 
-            internal Accessor(FieldInfo fi, DGet<T, V> dget, DRSet<T, V> drset)
-            {
+         internal Accessor(FieldInfo fi, DGet<T, V> dget, DRSet<T, V> drset) {
             this.fi = fi;
             this.dget = dget;
             this.drset = drset;
          }
 
-            public override V GetValue(T instance)
-            {
-                if (this.dget != null)
-                {
+         public override V GetValue(T instance) {
+
+            if (this.dget != null) {
                return this.dget(instance);
             }
 
             return (V)fi.GetValue(instance);
          }
 
-            public override void SetValue(ref T instance, V value)
-            {
-                if (this.drset != null)
-                {
+         public override void SetValue(ref T instance, V value) {
+
+            if (this.drset != null) {
                this.drset(ref instance, value);
-                }
-                else
-                {
+            } else {
                this.fi.SetValue(instance, value);
             }
          }
       }
    }
 
-    static class PropertyAccessor
-    {
-        internal static MetaAccessor Create(Type objectType, PropertyInfo pi, MetaAccessor storageAccessor)
-        {
+   static class PropertyAccessor {
+
+      internal static MetaAccessor Create(Type objectType, PropertyInfo pi, MetaAccessor storageAccessor) {
+
          Delegate dset = null;
          Delegate drset = null;
          Type dgetType = typeof(DGet<,>).MakeGenericType(objectType, pi.PropertyType);
@@ -114,19 +106,16 @@ namespace AnubisWorks.SQLFactory.Metadata
 
          Delegate dget = Delegate.CreateDelegate(dgetType, getMethod, true);
 
-            if (dget == null)
-            {
+         if (dget == null) {
             throw Error.CouldNotCreateAccessorToProperty(objectType, pi.PropertyType, pi);
          }
 
-            if (pi.CanWrite)
-            {
-                if (!objectType.IsValueType)
-                {
+         if (pi.CanWrite) {
+
+            if (!objectType.IsValueType) {
                dset = Delegate.CreateDelegate(typeof(DSet<,>).MakeGenericType(objectType, pi.PropertyType), pi.GetSetMethod(true), true);
-                }
-                else
-                {
+            } else {
+
                DynamicMethod mset = new DynamicMethod(
                   "xset_" + pi.Name,
                   typeof(void),
@@ -137,8 +126,7 @@ namespace AnubisWorks.SQLFactory.Metadata
                ILGenerator gen = mset.GetILGenerator();
                gen.Emit(OpCodes.Ldarg_0);
 
-                    if (!objectType.IsValueType)
-                    {
+               if (!objectType.IsValueType) {
                   gen.Emit(OpCodes.Ldind_Ref);
                }
 
@@ -158,16 +146,16 @@ namespace AnubisWorks.SQLFactory.Metadata
          );
       }
 
-        class Accessor<T, V, V2> : MetaAccessor<T, V> where V2 : V
-        {
+      class Accessor<T, V, V2> : MetaAccessor<T, V> where V2 : V {
+
          PropertyInfo pi;
          DGet<T, V> dget;
          DSet<T, V> dset;
          DRSet<T, V> drset;
          MetaAccessor<T, V2> storage;
 
-            internal Accessor(PropertyInfo pi, DGet<T, V> dget, DSet<T, V> dset, DRSet<T, V> drset, MetaAccessor<T, V2> storage)
-            {
+         internal Accessor(PropertyInfo pi, DGet<T, V> dget, DSet<T, V> dset, DRSet<T, V> drset, MetaAccessor<T, V2> storage) {
+
             this.pi = pi;
             this.dget = dget;
             this.dset = dset;
@@ -175,27 +163,22 @@ namespace AnubisWorks.SQLFactory.Metadata
             this.storage = storage;
          }
 
-            public override V GetValue(T instance)
-            {
+         public override V GetValue(T instance) {
             return this.dget(instance);
          }
 
-            public override void SetValue(ref T instance, V value)
-            {
-                if (this.dset != null)
-                {
+         public override void SetValue(ref T instance, V value) {
+
+            if (this.dset != null) {
                this.dset(instance, value);
-                }
-                else if (this.drset != null)
-                {
+
+            } else if (this.drset != null) {
                this.drset(ref instance, value);
-                }
-                else if (this.storage != null)
-                {
+
+            } else if (this.storage != null) {
                this.storage.SetValue(ref instance, (V2)value);
-                }
-                else
-                {
+
+            } else {
                throw Error.UnableToAssignValueToReadonlyProperty(this.pi);
             }
          }

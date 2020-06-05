@@ -7,498 +7,457 @@ using System.Globalization;
 using System.Linq;
 using System.Reflection;
 
-namespace AnubisWorks.SQLFactory
-{
-    partial class Database
-    {
-        /// <summary>
-        /// Maps the results of the <paramref name="query"/> to <typeparamref name="TResult"/> objects.
-        /// The query is deferred-executed.
-        /// </summary>
-        /// <typeparam name="TResult">The type of objects to map the results to.</typeparam>
-        /// <param name="query">The query.</param>
-        /// <returns>The results of the query as <typeparamref name="TResult"/> objects.</returns>
-        public IEnumerable<TResult> Map<TResult>(SqlBuilder query)
-        {
-            Mapper mapper = CreatePocoMapper(typeof(TResult));
+namespace AnubisWorks.SQLFactory {
 
-            return Map(query, r => (TResult) mapper.Map(r));
-        }
+   partial class Database {
 
-        /// <summary>
-        /// Maps the results of the <paramref name="query"/> to objects of type
-        /// specified by the <paramref name="resultType"/> parameter.
-        /// The query is deferred-executed.
-        /// </summary>
-        /// <param name="resultType">The type of objects to map the results to.</param>
-        /// <param name="query">The query.</param>
-        /// <returns>The results of the query as objects of type specified by the <paramref name="resultType"/> parameter.</returns>
-        public IEnumerable<object> Map(Type resultType, SqlBuilder query)
-        {
-            Mapper mapper = CreatePocoMapper(resultType);
+      /// <summary>
+      /// Maps the results of the <paramref name="query"/> to <typeparamref name="TResult"/> objects.
+      /// The query is deferred-executed.
+      /// </summary>
+      /// <typeparam name="TResult">The type of objects to map the results to.</typeparam>
+      /// <param name="query">The query.</param>
+      /// <returns>The results of the query as <typeparamref name="TResult"/> objects.</returns>
 
-            return Map(query, r => mapper.Map(r));
-        }
+      public IEnumerable<TResult> Map<TResult>(SqlBuilder query) {
 
-        internal Mapper CreatePocoMapper(Type type)
-        {
-            return new PocoMapper(type)
-            {
-                Log = this.Configuration.Log
-            };
-        }
-    }
+         Mapper mapper = CreatePocoMapper(typeof(TResult));
 
-    partial class SqlSet
-    {
-        IEnumerable PocoMap(bool singleResult)
-        {
-            Mapper mapper = this.db.CreatePocoMapper(this.ResultType);
-            mapper.SingleResult = singleResult;
+         return Map(query, r => (TResult)mapper.Map(r));
+      }
 
-            InitializeMapper(mapper);
+      /// <summary>
+      /// Maps the results of the <paramref name="query"/> to objects of type
+      /// specified by the <paramref name="resultType"/> parameter.
+      /// The query is deferred-executed.
+      /// </summary>
+      /// <param name="resultType">The type of objects to map the results to.</param>
+      /// <param name="query">The query.</param>
+      /// <returns>The results of the query as objects of type specified by the <paramref name="resultType"/> parameter.</returns>
 
-            return this.db.Map(GetDefiningQuery(clone: false), r => mapper.Map(r));
-        }
-    }
+      public IEnumerable<object> Map(Type resultType, SqlBuilder query) {
 
-    class PocoMapper : Mapper
-    {
-        readonly Type type;
+         Mapper mapper = CreatePocoMapper(resultType);
 
-        public PocoMapper(Type type)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+         return Map(query, r => mapper.Map(r));
+      }
 
-            this.type = type;
-        }
+      internal Mapper CreatePocoMapper(Type type) {
 
-        protected override Node CreateRootNode()
-        {
-            return PocoNode.Root(this.type);
-        }
+         return new PocoMapper(type) {
+            Log = this.Configuration.Log
+         };
+      }
+   }
 
-        protected override Node CreateSimpleProperty(Node container, string propertyName, int columnOrdinal)
-        {
-            PropertyInfo property = GetProperty(((PocoNode) container).UnderlyingType, propertyName);
+   partial class SqlSet {
 
-            if (property == null)
-            {
-                return null;
-            }
+      IEnumerable PocoMap(bool singleResult) {
 
-            return PocoNode.Simple(columnOrdinal, property);
-        }
+         Mapper mapper = this.db.CreatePocoMapper(this.ResultType);
+         mapper.SingleResult = singleResult;
 
-        protected override Node CreateComplexProperty(Node container, string propertyName)
-        {
-            PropertyInfo property = GetProperty(((PocoNode) container).UnderlyingType, propertyName);
+         InitializeMapper(mapper);
 
-            if (property == null)
-            {
-                return null;
-            }
+         return this.db.Map(GetDefiningQuery(clone: false), r => mapper.Map(r));
+      }
+   }
 
-            return PocoNode.Complex(property);
-        }
+   class PocoMapper : Mapper {
 
-        protected override Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo)
-        {
-            return PocoNode.Simple(columnOrdinal, paramInfo);
-        }
+      readonly Type type;
 
-        protected override Node CreateParameterNode(ParameterInfo paramInfo)
-        {
-            return PocoNode.Root(paramInfo);
-        }
+      public PocoMapper(Type type) {
 
-        protected override CollectionNode CreateCollectionNode(Node container, string propertyName)
-        {
-            Type declaringType = ((PocoNode) container).UnderlyingType;
+         if (type == null) throw new ArgumentNullException(nameof(type));
 
-            PropertyInfo property = declaringType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+         this.type = type;
+      }
 
-            if (property == null)
-            {
-                return null;
-            }
+      protected override Node CreateRootNode() {
+         return PocoNode.Root(this.type);
+      }
 
-            if (!typeof(IEnumerable).IsAssignableFrom(property.PropertyType))
-            {
-                return null;
-            }
+      protected override Node CreateSimpleProperty(Node container, string propertyName, int columnOrdinal) {
 
-            return new PocoCollection(property);
-        }
+         PropertyInfo property = GetProperty(((PocoNode)container).UnderlyingType, propertyName);
 
-        static PropertyInfo GetProperty(Type declaringType, string propertyName)
-        {
-            PropertyInfo property = declaringType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+         if (property == null) {
+            return null;
+         }
 
-            if (property == null)
-            {
-                return property;
-            }
+         return PocoNode.Simple(columnOrdinal, property);
+      }
 
-            if (!property.CanWrite)
-            {
-                throw new InvalidOperationException($"'{property.ReflectedType.FullName}' property '{property.Name}' doesn't have a setter.");
-            }
+      protected override Node CreateComplexProperty(Node container, string propertyName) {
 
+         PropertyInfo property = GetProperty(((PocoNode)container).UnderlyingType, propertyName);
+
+         if (property == null) {
+            return null;
+         }
+
+         return PocoNode.Complex(property);
+      }
+
+      protected override Node CreateParameterNode(int columnOrdinal, ParameterInfo paramInfo) {
+         return PocoNode.Simple(columnOrdinal, paramInfo);
+      }
+
+      protected override Node CreateParameterNode(ParameterInfo paramInfo) {
+         return PocoNode.Root(paramInfo);
+      }
+
+      protected override CollectionNode CreateCollectionNode(Node container, string propertyName) {
+
+         Type declaringType = ((PocoNode)container).UnderlyingType;
+
+         PropertyInfo property = declaringType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+         if (property == null) {
+            return null;
+         }
+
+         if (!typeof(IEnumerable).IsAssignableFrom(property.PropertyType)) {
+            return null;
+         }
+
+         return new PocoCollection(property);
+      }
+
+      static PropertyInfo GetProperty(Type declaringType, string propertyName) {
+
+         PropertyInfo property = declaringType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+         if (property == null) {
             return property;
-        }
-    }
+         }
 
-    class PocoNode : Node
-    {
-        readonly Type Type;
-        public readonly Type UnderlyingType;
+         if (!property.CanWrite) {
+            throw new InvalidOperationException($"'{property.ReflectedType.FullName}' property '{property.Name}' doesn't have a setter.");
+         }
 
-        readonly PropertyInfo Property;
-        readonly MethodInfo Setter;
+         return property;
+      }
+   }
 
-        bool _IsComplex;
-        int _ColumnOrdinal;
+   class PocoNode : Node {
 
-        public Func<PocoNode, object, object> ConvertFunction;
-        public ParameterInfo Parameter;
+      readonly Type Type;
+      public readonly Type UnderlyingType;
 
-        public override bool IsComplex
-        {
-            get { return _IsComplex; }
-        }
+      readonly PropertyInfo Property;
+      readonly MethodInfo Setter;
 
-        public override string PropertyName
-        {
-            get
-            {
-                if (this.Property == null)
-                {
-                    return null;
-                }
+      bool _IsComplex;
+      int _ColumnOrdinal;
 
-                return this.Property.Name;
-            }
-        }
+      public Func<PocoNode, object, object> ConvertFunction;
+      public ParameterInfo Parameter;
 
-        public override int ColumnOrdinal
-        {
-            get { return _ColumnOrdinal; }
-        }
+      public override bool IsComplex {
+         get { return _IsComplex; }
+      }
 
-        public override string TypeName
-        {
-            get { return UnderlyingType.FullName; }
-        }
-
-        public static PocoNode Root(Type type)
-        {
-            var node = new PocoNode(type)
-            {
-                _IsComplex = true,
-            };
-
-            return node;
-        }
-
-        public static PocoNode Root(ParameterInfo parameter)
-        {
-            var node = Root(parameter.ParameterType);
-            node.Parameter = parameter;
-
-            return node;
-        }
-
-        public static PocoNode Complex(PropertyInfo property)
-        {
-            var node = new PocoNode(property)
-            {
-                _IsComplex = true,
-            };
-
-            return node;
-        }
-
-        public static PocoNode Simple(int columnOrdinal, PropertyInfo property)
-        {
-            var node = new PocoNode(property)
-            {
-                _ColumnOrdinal = columnOrdinal
-            };
-
-            return node;
-        }
-
-        public static PocoNode Simple(int columnOrdinal, ParameterInfo parameter)
-        {
-            var node = new PocoNode(parameter.ParameterType)
-            {
-                _ColumnOrdinal = columnOrdinal,
-                Parameter = parameter
-            };
-
-            return node;
-        }
-
-        private PocoNode(Type type)
-        {
-            this.Type = type;
-
-            bool isNullableValueType = type.IsGenericType
-                                       && type.GetGenericTypeDefinition() == typeof(Nullable<>);
-
-            this.UnderlyingType = (isNullableValueType)
-                ? Nullable.GetUnderlyingType(type)
-                : type;
-        }
-
-        private PocoNode(PropertyInfo property)
-            : this(property.PropertyType)
-        {
-            this.Property = property;
-            this.Setter = property.GetSetMethod(true);
-        }
-
-        public override object Create(IDataRecord record, MappingContext context)
-        {
-            if (this.Constructor == null)
-            {
-                return Activator.CreateInstance(this.Type);
+      public override string PropertyName {
+         get {
+            if (this.Property == null) {
+               return null;
             }
 
-            object[] args = this.ConstructorParameters.Select(m => m.Value.Map(record, context)).ToArray();
+            return this.Property.Name;
+         }
+      }
 
-            if (this.ConstructorParameters.Any(p => ((PocoNode) p.Value).ConvertFunction != null)
-                || args.All(v => v == null))
-            {
-                return this.Constructor.Invoke(args);
+      public override int ColumnOrdinal {
+         get { return _ColumnOrdinal; }
+      }
+
+      public override string TypeName {
+         get { return UnderlyingType.FullName; }
+      }
+
+      public static PocoNode Root(Type type) {
+
+         var node = new PocoNode(type) {
+            _IsComplex = true,
+         };
+
+         return node;
+      }
+
+      public static PocoNode Root(ParameterInfo parameter) {
+
+         var node = Root(parameter.ParameterType);
+         node.Parameter = parameter;
+
+         return node;
+      }
+
+      public static PocoNode Complex(PropertyInfo property) {
+
+         var node = new PocoNode(property) {
+            _IsComplex = true,
+         };
+
+         return node;
+      }
+
+      public static PocoNode Simple(int columnOrdinal, PropertyInfo property) {
+
+         var node = new PocoNode(property) {
+            _ColumnOrdinal = columnOrdinal
+         };
+
+         return node;
+      }
+
+      public static PocoNode Simple(int columnOrdinal, ParameterInfo parameter) {
+
+         var node = new PocoNode(parameter.ParameterType) {
+            _ColumnOrdinal = columnOrdinal,
+            Parameter = parameter
+         };
+
+         return node;
+      }
+
+      private PocoNode(Type type) {
+
+         this.Type = type;
+
+         bool isNullableValueType = type.IsGenericType
+            && type.GetGenericTypeDefinition() == typeof(Nullable<>);
+
+         this.UnderlyingType = (isNullableValueType) ?
+            Nullable.GetUnderlyingType(type)
+            : type;
+      }
+
+      private PocoNode(PropertyInfo property)
+         : this(property.PropertyType) {
+
+         this.Property = property;
+         this.Setter = property.GetSetMethod(true);
+      }
+
+      public override object Create(IDataRecord record, MappingContext context) {
+
+         if (this.Constructor == null) {
+            return Activator.CreateInstance(this.Type);
+         }
+
+         object[] args = this.ConstructorParameters.Select(m => m.Value.Map(record, context)).ToArray();
+
+         if (this.ConstructorParameters.Any(p => ((PocoNode)p.Value).ConvertFunction != null)
+            || args.All(v => v == null)) {
+
+            return this.Constructor.Invoke(args);
+         }
+
+         try {
+            return this.Constructor.Invoke(args);
+
+         } catch (ArgumentException) {
+
+            bool convertSet = false;
+
+            for (int i = 0; i < this.ConstructorParameters.Count; i++) {
+
+               object value = args[i];
+
+               if (value == null) {
+                  continue;
+               }
+
+               PocoNode paramNode = (PocoNode)this.ConstructorParameters.ElementAt(i).Value;
+
+               if (!paramNode.Type.IsAssignableFrom(value.GetType())) {
+
+                  Func<PocoNode, object, object> convert = GetConversionFunction(value, paramNode);
+
+                  context.Log?.WriteLine($"-- WARNING: Couldn't instantiate {this.UnderlyingType.FullName} with argument '{paramNode.Parameter.Name}' of type {paramNode.Type.FullName} {((value == null) ? "to null" : $"with value of type '{value.GetType().FullName}'")}. Attempting conversion.");
+
+                  paramNode.ConvertFunction = convert;
+
+                  convertSet = true;
+               }
             }
 
-            try
-            {
-                return this.Constructor.Invoke(args);
-            }
-            catch (ArgumentException)
-            {
-                bool convertSet = false;
-
-                for (int i = 0; i < this.ConstructorParameters.Count; i++)
-                {
-                    object value = args[i];
-
-                    if (value == null)
-                    {
-                        continue;
-                    }
-
-                    PocoNode paramNode = (PocoNode) this.ConstructorParameters.ElementAt(i).Value;
-
-                    if (!paramNode.Type.IsAssignableFrom(value.GetType()))
-                    {
-                        Func<PocoNode, object, object> convert = GetConversionFunction(value, paramNode);
-
-                        context.Log?.WriteLine($"-- WARNING: Couldn't instantiate {this.UnderlyingType.FullName} with argument '{paramNode.Parameter.Name}' of type {paramNode.Type.FullName} {((value == null) ? "to null" : $"with value of type '{value.GetType().FullName}'")}. Attempting conversion.");
-
-                        paramNode.ConvertFunction = convert;
-
-                        convertSet = true;
-                    }
-                }
-
-                if (convertSet)
-                {
-                    return Create(record, context);
-                }
-
-                throw;
-            }
-        }
-
-        protected override object MapSimple(IDataRecord record, MappingContext context)
-        {
-            object value = base.MapSimple(record, context);
-
-            Func<PocoNode, object, object> convertFn;
-
-            if (value != null
-                && (convertFn = this.ConvertFunction) != null)
-            {
-                value = convertFn(this, value);
+            if (convertSet) {
+               return Create(record, context);
             }
 
-            return value;
-        }
+            throw;
+         }
+      }
 
-        protected override object Get(ref object instance)
-        {
-            return GetProperty(ref instance);
-        }
+      protected override object MapSimple(IDataRecord record, MappingContext context) {
 
-        protected override void Set(ref object instance, object value, MappingContext context)
-        {
-            if (this.IsComplex)
-            {
-                SetProperty(ref instance, value);
+         object value = base.MapSimple(record, context);
+
+         Func<PocoNode, object, object> convertFn;
+
+         if (value != null
+            && (convertFn = this.ConvertFunction) != null) {
+
+            value = convertFn(this, value);
+         }
+
+         return value;
+      }
+
+      protected override object Get(ref object instance) {
+         return GetProperty(ref instance);
+      }
+
+      protected override void Set(ref object instance, object value, MappingContext context) {
+
+         if (this.IsComplex) {
+            SetProperty(ref instance, value);
+
+         } else {
+
+            try {
+               SetSimple(ref instance, value, context);
+
+            } catch (Exception ex) {
+               throw new InvalidCastException($"Couldn't set '{this.Property.ReflectedType.FullName}' property '{this.Property.Name}' of type '{this.Type.FullName}' {((value == null) ? "to null" : $"with value of type '{value.GetType().FullName}'")}.", ex);
             }
-            else
-            {
-                try
-                {
-                    SetSimple(ref instance, value, context);
-                }
-                catch (Exception ex)
-                {
-                    throw new InvalidCastException($"Couldn't set '{this.Property.ReflectedType.FullName}' property '{this.Property.Name}' of type '{this.Type.FullName}' {((value == null) ? "to null" : $"with value of type '{value.GetType().FullName}'")}.", ex);
-                }
-            }
-        }
+         }
+      }
 
-        void SetSimple(ref object instance, object value, MappingContext context)
-        {
-            if (this.ConvertFunction != null || value == null)
-            {
-                SetProperty(ref instance, value);
-                return;
-            }
+      void SetSimple(ref object instance, object value, MappingContext context) {
 
-            try
-            {
-                SetProperty(ref instance, value);
-            }
-            catch (ArgumentException)
-            {
-                Func<PocoNode, object, object> convert = GetConversionFunction(value, this);
+         if (this.ConvertFunction != null || value == null) {
+            SetProperty(ref instance, value);
+            return;
+         }
 
-                context.Log?.WriteLine($"-- WARNING: Couldn't set '{this.Property.ReflectedType.FullName}' property '{this.Property.Name}' of type '{this.Property.PropertyType.FullName}' {((value == null) ? "to null" : $"with value of type '{value.GetType().FullName}'")}. Attempting conversion.");
+         try {
+            SetProperty(ref instance, value);
 
-                value = convert(this, value);
+         } catch (ArgumentException) {
 
-                this.ConvertFunction = convert;
+            Func<PocoNode, object, object> convert = GetConversionFunction(value, this);
 
-                SetSimple(ref instance, value, context);
-            }
-        }
+            context.Log?.WriteLine($"-- WARNING: Couldn't set '{this.Property.ReflectedType.FullName}' property '{this.Property.Name}' of type '{this.Property.PropertyType.FullName}' {((value == null) ? "to null" : $"with value of type '{value.GetType().FullName}'")}. Attempting conversion.");
 
-        object GetProperty(ref object instance)
-        {
-            return this.Property.GetValue(instance, null);
-        }
+            value = convert(this, value);
 
-        void SetProperty(ref object instance, object value)
-        {
-            this.Setter.Invoke(instance, new object[1] {value});
-        }
+            this.ConvertFunction = convert;
 
-        public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr)
-        {
-            return UnderlyingType.GetConstructors(bindingAttr);
-        }
+            SetSimple(ref instance, value, context);
+         }
+      }
 
-        static Func<PocoNode, object, object> GetConversionFunction(object value, PocoNode node)
-        {
-            if (node.UnderlyingType == typeof(bool))
-            {
-                if (value.GetType() == typeof(string))
-                {
-                    return ConvertToBoolean;
-                }
-            }
-            else if (node.UnderlyingType.IsEnum)
-            {
-                if (value.GetType() == typeof(string))
-                {
-                    return ParseEnum;
-                }
+      object GetProperty(ref object instance) {
+         return this.Property.GetValue(instance, null);
+      }
 
-                return CastToEnum;
+      void SetProperty(ref object instance, object value) {
+         this.Setter.Invoke(instance, new object[1] { value });
+      }
+
+      public override ConstructorInfo[] GetConstructors(BindingFlags bindingAttr) {
+         return UnderlyingType.GetConstructors(bindingAttr);
+      }
+
+      static Func<PocoNode, object, object> GetConversionFunction(object value, PocoNode node) {
+
+         if (node.UnderlyingType == typeof(bool)) {
+
+            if (value.GetType() == typeof(string)) {
+               return ConvertToBoolean;
             }
 
-            return ConvertTo;
-        }
+         } else if (node.UnderlyingType.IsEnum) {
 
-        static object ConvertToBoolean(PocoNode node, object value)
-        {
-            return Convert.ToBoolean(Convert.ToInt64(value, CultureInfo.InvariantCulture));
-        }
-
-        static object CastToEnum(PocoNode node, object value)
-        {
-            return Enum.ToObject(node.UnderlyingType, value);
-        }
-
-        static object ParseEnum(PocoNode node, object value)
-        {
-            return Enum.Parse(node.UnderlyingType, Convert.ToString(value, CultureInfo.InvariantCulture));
-        }
-
-        static object ConvertTo(PocoNode node, object value)
-        {
-            return Convert.ChangeType(value, node.UnderlyingType, CultureInfo.InvariantCulture);
-        }
-    }
-
-    class PocoCollection : CollectionNode
-    {
-        readonly PropertyInfo property;
-        readonly Type elementType;
-        readonly MethodInfo addMethod;
-
-        public PocoCollection(PropertyInfo property)
-        {
-            this.property = property;
-
-            Type colType = this.property.PropertyType;
-            this.elementType = typeof(object);
-
-            for (Type type = colType; type != null; type = type.BaseType)
-            {
-                Type[] interfaces = type.GetInterfaces();
-
-                Type genericICol = type.GetInterfaces()
-                    .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>));
-
-                if (genericICol != null)
-                {
-                    this.elementType = genericICol.GetGenericArguments()[0];
-                    break;
-                }
+            if (value.GetType() == typeof(string)) {
+               return ParseEnum;
             }
 
-            this.addMethod = colType.GetMethod("Add", BindingFlags.Instance | BindingFlags.Public, null, new[] {this.elementType}, null);
+            return CastToEnum;
+         }
 
-            if (this.addMethod == null)
-            {
-                throw new InvalidOperationException($"Couldn't find a public 'Add' method on '{colType.FullName}'.");
+         return ConvertTo;
+      }
+
+      static object ConvertToBoolean(PocoNode node, object value) {
+         return Convert.ToBoolean(Convert.ToInt64(value, CultureInfo.InvariantCulture));
+      }
+
+      static object CastToEnum(PocoNode node, object value) {
+         return Enum.ToObject(node.UnderlyingType, value);
+      }
+
+      static object ParseEnum(PocoNode node, object value) {
+         return Enum.Parse(node.UnderlyingType, Convert.ToString(value, CultureInfo.InvariantCulture));
+      }
+
+      static object ConvertTo(PocoNode node, object value) {
+         return Convert.ChangeType(value, node.UnderlyingType, CultureInfo.InvariantCulture);
+      }
+   }
+
+   class PocoCollection : CollectionNode {
+
+      readonly PropertyInfo property;
+      readonly Type elementType;
+      readonly MethodInfo addMethod;
+
+      public PocoCollection(PropertyInfo property) {
+
+         this.property = property;
+
+         Type colType = this.property.PropertyType;
+         this.elementType = typeof(object);
+
+         for (Type type = colType; type != null; type = type.BaseType) {
+
+            Type[] interfaces = type.GetInterfaces();
+
+            Type genericICol = type.GetInterfaces()
+               .FirstOrDefault(t => t.IsGenericType && t.GetGenericTypeDefinition() == typeof(ICollection<>));
+
+            if (genericICol != null) {
+               this.elementType = genericICol.GetGenericArguments()[0];
+               break;
             }
-        }
+         }
 
-        protected override IEnumerable GetOrCreate(ref object instance, MappingContext context)
-        {
-            object collection = this.property.GetValue(instance, null);
+         this.addMethod = colType.GetMethod("Add", BindingFlags.Instance | BindingFlags.Public, null, new[] { this.elementType }, null);
 
-            if (collection == null)
-            {
-                Type collectionType = this.property.PropertyType;
+         if (this.addMethod == null) {
+            throw new InvalidOperationException($"Couldn't find a public 'Add' method on '{colType.FullName}'.");
+         }
+      }
 
-                if (collectionType.IsAbstract
-                    || collectionType.IsInterface)
-                {
-                    collection = Activator.CreateInstance(typeof(Collection<>).MakeGenericType(this.elementType));
-                }
-                else
-                {
-                    collection = Activator.CreateInstance(collectionType);
-                }
+      protected override IEnumerable GetOrCreate(ref object instance, MappingContext context) {
 
-                this.property.SetValue(instance, collection, null);
+         object collection = this.property.GetValue(instance, null);
+
+         if (collection == null) {
+
+            Type collectionType = this.property.PropertyType;
+
+            if (collectionType.IsAbstract
+               || collectionType.IsInterface) {
+
+               collection = Activator.CreateInstance(typeof(Collection<>).MakeGenericType(this.elementType));
+
+            } else {
+               collection = Activator.CreateInstance(collectionType);
             }
 
-            return (IEnumerable) collection;
-        }
+            this.property.SetValue(instance, collection, null);
+         }
 
-        protected override void Add(IEnumerable collection, object element, MappingContext context)
-        {
-            this.addMethod.Invoke(collection, new[] {element});
-        }
-    }
+         return (IEnumerable)collection;
+      }
+
+      protected override void Add(IEnumerable collection, object element, MappingContext context) {
+         this.addMethod.Invoke(collection, new[] { element });
+      }
+   }
 }

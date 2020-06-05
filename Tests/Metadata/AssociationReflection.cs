@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.ObjectModel;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AnubisWorks.SQLFactory.Metadata;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace AnubisWorks.SQLFactory.Tests.Metadata {
 
