@@ -1,14 +1,14 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26430.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLFactory", "Core\SQLFactory.csproj", "{00835184-82D5-4720-8750-F99A7209730A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLFactory", "Core\SQLFactory.csproj", "{00835184-82D5-4720-8750-F99A7209730A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{6CDC25E6-EE8C-40BB-A354-4D2A1781F449}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{5936FE3E-8EDD-44AF-8431-A7F86A1643B8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SQLFactory.Tests", "Tests\SQLFactory.Tests.csproj", "{602464F1-7A5E-47CF-B6A3-3CCAAC7036C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SQLFactory.Tests", "Tests\SQLFactory.Tests.csproj", "{602464F1-7A5E-47CF-B6A3-3CCAAC7036C6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

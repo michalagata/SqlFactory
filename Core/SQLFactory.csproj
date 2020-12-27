@@ -2,7 +2,7 @@
   <PropertyGroup>
 	<OutputType>Library</OutputType>
     <LangVersion>latest</LangVersion>
-    <TargetFrameworks>netcoreapp2.1;netstandard2.1</TargetFrameworks>
+    <TargetFrameworks>net451;net452;net46;net461;net462;net47;net471;net472;net48;netstandard2.1</TargetFrameworks>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Version>2.1.12.18</Version>
     <FileVersion>2.1.12.18</FileVersion>
@@ -25,6 +25,12 @@
 	<PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
+  <PropertyGroup Condition=" $(TargetFramework) == 'netstandard2.0' or $(TargetFramework) == 'netstandard2.1' ">
+    <DefineConstants>NETSTANDARD</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" $(TargetFramework) != 'netstandard2.0' or $(TargetFramework) != 'netstandard2.1' ">
+    <Reference Include="System.Transactions" />
+  </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>SQLFactory.Tests</_Parameter1>

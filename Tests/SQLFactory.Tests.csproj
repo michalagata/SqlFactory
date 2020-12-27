@@ -36,9 +36,9 @@
     <Compile Remove="obj\Release\TemporaryGeneratedFile_E7A71F73-0F8D-4B9B-B56E-8E70B10BC5D3.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\SQLFactory.csproj" />
+    <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <ProjectReference Include="..\Core\SQLFactory.csproj" />
   </ItemGroup>
 </Project>
