@@ -1,3 +1,6 @@
+#region Based on code from .NET Framework
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Threading;

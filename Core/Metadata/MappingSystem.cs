@@ -1,4 +1,7 @@
-﻿using System;
+﻿#region Based on code from .NET Framework
+#endregion
+
+using System;
 
 namespace AnubisWorks.SQLFactory.Metadata {
 

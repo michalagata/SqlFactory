@@ -1,4 +1,7 @@
-﻿using System;
+﻿#region Based on code from .NET Framework
+#endregion
+
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace AnubisWorks.SQLFactory {
@@ -233,5 +236,39 @@ namespace AnubisWorks.SQLFactory {
       string Name { get; set; }
 
       string Storage { get; set; }
+   }
+
+   /// <summary>
+   /// Designates a property as a complex property that groups columns of a table that share the same base name.
+   /// </summary>
+
+   [AttributeUsage(AttributeTargets.Property)]
+   public sealed class ComplexPropertyAttribute : Attribute {
+
+      /// <summary>
+      /// The base name for the columns on the complex property.
+      /// The default is the property name.
+      /// </summary>
+
+      public string Name { get; set; }
+
+      /// <summary>
+      /// The separator to use between the base name and the complex property's columns.
+      /// The default is null, which means the separator is taken from <see cref="DatabaseConfiguration.DefaultComplexPropertySeparator"/>.
+      /// To use no separator and override the default configuration, use an empty <see cref="string"/>.
+      /// </summary>
+
+      public string Separator { get; set; }
+
+      /// <summary>
+      /// Initializes a new instance of the <see cref="ComplexPropertyAttribute"/> class
+      /// </summary>
+
+      public ComplexPropertyAttribute() { }
+
+      internal ComplexPropertyAttribute(ComplexPropertyAttribute other) {
+         this.Name = other.Name;
+         this.Separator = other.Separator;
+      }
    }
 }

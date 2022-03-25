@@ -27,7 +27,6 @@ namespace AnubisWorks.SQLFactory {
       partial void Initialize2(string providerInvariantName) {
 
          this.Configuration.SetModel(() => mappingSource.GetModel(GetType()));
-
          Initialize3(providerInvariantName);
       }
 
@@ -41,7 +40,7 @@ namespace AnubisWorks.SQLFactory {
 
       public SqlTable<TEntity> Table<TEntity>() where TEntity : class {
 
-         MetaType metaType = this.Configuration.Model.GetMetaType(typeof(TEntity));
+         MetaType metaType = this.Configuration.GetMetaType(typeof(TEntity));
          ISqlTable set;
          SqlTable<TEntity> table;
 
@@ -63,7 +62,7 @@ namespace AnubisWorks.SQLFactory {
       /// <returns>The <see cref="SqlTable"/> instance for <paramref name="entityType"/>.</returns>
 
       public SqlTable Table(Type entityType) {
-         return Table(this.Configuration.Model.GetMetaType(entityType));
+         return Table(this.Configuration.GetMetaType(entityType));
       }
 
       internal SqlTable Table(MetaType metaType) {
@@ -94,7 +93,7 @@ namespace AnubisWorks.SQLFactory {
             .Add(entity);
       }
 
-      /// <inheritdoc cref="SqlSet&lt;TEntity>.Find(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet&lt;TEntity>.Find(Object)" path="*[not(self::remarks or self::exception[@cref='T:System.InvalidOperationException'])]"/>
       /// <typeparam name="TEntity">The type of the entity.</typeparam>
       /// <remarks>This method is a shortcut for <c>db.Table&lt;TEntity>().Find(id)</c>.</remarks>
       /// <seealso cref="SqlSet&lt;TEntity>.Find(Object)"/>
@@ -105,7 +104,7 @@ namespace AnubisWorks.SQLFactory {
             .Find(id);
       }
 
-      /// <inheritdoc cref="SqlSet.Find(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.Find(Object)" path="*[not(self::remarks or self::exception[@cref='T:System.InvalidOperationException'])]"/>
       /// <param name="entityType">The type of the entity.</param>
       /// <remarks>This method is a shortcut for <c>db.Table(entityType).Find(id)</c>.</remarks>
       /// <seealso cref="SqlSet.Find(Object)"/>
@@ -118,7 +117,7 @@ namespace AnubisWorks.SQLFactory {
             .Find(id);
       }
 
-      /// <inheritdoc cref="SqlSet.Contains(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.Contains(Object)" path="*[not(self::remarks or self::exception[@cref='T:System.InvalidOperationException'])]"/>
       /// <remarks>This method is a shortcut for <c>db.Table(entity.GetType()).Contains(entity)</c>.</remarks>
       /// <seealso cref="SqlSet.Contains(Object)"/>
 
@@ -130,7 +129,7 @@ namespace AnubisWorks.SQLFactory {
             .Contains(entity);
       }
 
-      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" path="*[not(self::remarks or self::exception[@cref='T:System.InvalidOperationException'])]"/>
       /// <typeparam name="TEntity">The type of the entity.</typeparam>
       /// <remarks>This method is a shortcut for <c>db.Table&lt;TEntity>().ContainsKey(id)</c>.</remarks>
       /// <seealso cref="SqlSet.ContainsKey(Object)"/>
@@ -141,7 +140,7 @@ namespace AnubisWorks.SQLFactory {
             .ContainsKey(id);
       }
 
-      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" path="*[not(self::remarks or self::exception[@cref='T:System.InvalidOperationException'])]"/>
       /// <param name="entityType">The type of the entity.</param>
       /// <remarks>This method is a shortcut for <c>db.Table(entityType).ContainsKey(id)</c>.</remarks>
       /// <seealso cref="SqlSet.ContainsKey(Object)"/>
@@ -272,7 +271,7 @@ namespace AnubisWorks.SQLFactory {
          while (enumerator.MoveNext()) {
 
             string mappedName = enumerator.Current.MappedName;
-            string memberName = enumerator.Current.Name;
+            string memberName = enumerator.Current.QueryPath;
             string columnAlias = !String.Equals(mappedName, memberName, StringComparison.Ordinal) ?
                memberName : null;
 
@@ -311,6 +310,7 @@ namespace AnubisWorks.SQLFactory {
    sealed partial class DatabaseConfiguration {
 
       Lazy<MetaModel> _Model;
+      MetaTableConfiguration _defaultMetaTableConfig;
 
       /// <summary>
       /// Gets the <see cref="MetaModel"/> on which the mapping is based.
@@ -334,8 +334,31 @@ namespace AnubisWorks.SQLFactory {
 
       public bool EnableBatchCommands { get; set; } = true;
 
+      /// <summary>
+      /// The default separator to use when mapping complex properties.
+      /// The default value is null, which means no separator is used, unless an explicit separator
+      /// is specified on <see cref="ComplexPropertyAttribute.Separator"/>.
+      /// </summary>
+
+      public string DefaultComplexPropertySeparator { get; set; }
+
+      internal MetaTableConfiguration DefaultMetaTableConfig {
+         get {
+            if (_defaultMetaTableConfig == null) {
+               _defaultMetaTableConfig = new MetaTableConfiguration {
+                  DefaultComplexPropertySeparator = this.DefaultComplexPropertySeparator
+               };
+            }
+            return _defaultMetaTableConfig;
+         }
+      }
+
       internal void SetModel(Func<MetaModel> modelFn) {
          _Model = new Lazy<MetaModel>(modelFn);
+      }
+
+      internal MetaType GetMetaType(Type type) {
+         return this.Model.GetMetaType(type, this.DefaultMetaTableConfig);
       }
    }
 
@@ -352,6 +375,14 @@ namespace AnubisWorks.SQLFactory {
 
       readonly ISqlTable table;
       readonly MetaType metaType;
+
+      /// <summary>
+      /// Gets the name of the table.
+      /// </summary>
+
+      public string Name {
+         get { return metaType.Table.TableName; }
+      }
 
       /// <summary>
       /// Gets a <see cref="SqlCommandBuilder&lt;Object>"/> object for the current table.
@@ -472,13 +503,13 @@ namespace AnubisWorks.SQLFactory {
          this.table.RemoveRange(entities);
       }
 
-      /// <inheritdoc cref="SqlSet.Contains(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.Contains(Object)" path="*[not(self::exception[@cref='T:System.InvalidOperationException'])]"/>
 
       public new bool Contains(object entity) {
          return base.Contains(entity);
       }
 
-      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" path="*[not(self::exception[@cref='T:System.InvalidOperationException'])]"/>
 
       public new bool ContainsKey(object id) {
          return base.ContainsKey(id);
@@ -504,6 +535,12 @@ namespace AnubisWorks.SQLFactory {
    public sealed class SqlTable<TEntity> : SqlSet<TEntity>, ISqlTable where TEntity : class {
 
       readonly MetaType metaType;
+
+      /// <inheritdoc cref="SqlTable.Name"/>
+
+      public string Name {
+         get { return metaType.Table.TableName; }
+      }
 
       /// <summary>
       /// Gets a <see cref="SqlCommandBuilder&lt;TEntity>"/> object for the current table.
@@ -911,13 +948,13 @@ namespace AnubisWorks.SQLFactory {
          }
       }
 
-      /// <inheritdoc cref="SqlSet&lt;TEntity>.Contains(TEntity)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet&lt;TEntity>.Contains(TEntity)" path="*[not(self::exception[@cref='T:System.InvalidOperationException'])]"/>
 
       public new bool Contains(TEntity entity) {
          return base.Contains(entity);
       }
 
-      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" select="*[not(self::remarks)]"/>
+      /// <inheritdoc cref="SqlSet.ContainsKey(Object)" path="*[not(self::exception[@cref='T:System.InvalidOperationException'])]"/>
 
       public new bool ContainsKey(object id) {
          return base.ContainsKey(id);
@@ -1351,7 +1388,7 @@ namespace AnubisWorks.SQLFactory {
             throw new InvalidOperationException("The operation is not supported on untyped sets.");
          }
 
-         MetaType metaType = this.db.Configuration.Model.GetMetaType(resultType);
+         MetaType metaType = this.db.Configuration.GetMetaType(resultType);
 
          if (metaType == null) {
             throw new InvalidOperationException($"Mapping information was not found for '{resultType.FullName}'.");
@@ -1373,9 +1410,7 @@ namespace AnubisWorks.SQLFactory {
       /// </summary>
       /// <param name="entity">The entity whose existance is to be checked.</param>
       /// <returns>true if the primary key value exists in the database; otherwise false.</returns>
-      /// <remarks>
-      /// This method can only be used on sets where the result type is an annotated class.
-      /// </remarks>
+      /// <exception cref="System.InvalidOperationException">This method can only be used on sets where the result type is an annotated class.</exception>
 
       public bool Contains(object entity) {
 
@@ -1401,9 +1436,7 @@ namespace AnubisWorks.SQLFactory {
       /// </summary>
       /// <param name="id">The primary key value.</param>
       /// <returns>true if the primary key value exists in the database; otherwise false.</returns>
-      /// <remarks>
-      /// This method can only be used on sets where the result type is an annotated class.
-      /// </remarks>
+      /// <exception cref="System.InvalidOperationException">This method can only be used on sets where the result type is an annotated class.</exception>
 
       public bool ContainsKey(object id) {
 
@@ -1438,9 +1471,7 @@ namespace AnubisWorks.SQLFactory {
       /// The entity whose primary key matches the <paramref name="id"/> parameter, 
       /// or null if the <paramref name="id"/> does not exist.
       /// </returns>
-      /// <remarks>
-      /// This method can only be used on sets where the result type is an annotated class.
-      /// </remarks>
+      /// <exception cref="System.InvalidOperationException">This method can only be used on sets where the result type is an annotated class.</exception>
 
       public object Find(object id) {
          return FindImpl(id).SingleOrDefault();
@@ -1468,9 +1499,7 @@ namespace AnubisWorks.SQLFactory {
       /// </summary>
       /// <param name="path">Dot-separated list of related objects to return in the query results.</param>
       /// <returns>A new <see cref="SqlSet"/> with the defined query path.</returns>
-      /// <remarks>
-      /// This method can only be used on sets where the result type is an annotated class.
-      /// </remarks>
+      /// <exception cref="System.InvalidOperationException">This method can only be used on sets where the result type is an annotated class.</exception>
 
       public SqlSet Include(string path) {
 
@@ -1480,7 +1509,7 @@ namespace AnubisWorks.SQLFactory {
             throw new InvalidOperationException("Include operation is not supported on untyped sets.");
          }
 
-         MetaType metaType = this.db.Configuration.Model.GetMetaType(this.ResultType);
+         MetaType metaType = this.db.Configuration.GetMetaType(this.ResultType);
 
          if (metaType == null) {
             throw new InvalidOperationException($"Mapping information was not found for '{this.ResultType.FullName}'.");
@@ -1491,11 +1520,13 @@ namespace AnubisWorks.SQLFactory {
 
       static class IncludeImpl {
 
+         static readonly char[] _pathSeparator = { '.' };
+
          public static SqlSet Expand(SqlSet source, string path, MetaType metaType) {
 
             Database db = source.db;
 
-            string[] parts = path.Split('.');
+            string[] parts = path.Split(_pathSeparator);
 
             Func<string, SqlBuilder> selectBuild = alias =>
                new SqlBuilder().SELECT(db.QuoteIdentifier(alias) + ".*");
@@ -1732,6 +1763,8 @@ namespace AnubisWorks.SQLFactory {
    }
 
    interface ISqlTable {
+
+      string Name { get; }
 
       void Remove(object entity);
       void RemoveKey(object id);

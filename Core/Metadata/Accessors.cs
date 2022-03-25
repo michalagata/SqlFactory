@@ -1,4 +1,7 @@
-﻿using System;
+﻿#region Based on code from .NET Framework
+#endregion
+
+using System;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.CompilerServices;

@@ -66,7 +66,9 @@ namespace AnubisWorks.SQLFactory {
    class PocoMapper : Mapper {
 
       readonly Type type;
-
+      protected override bool CanUseConstructorMapping {
+         get { return true; }
+      }
       public PocoMapper(Type type) {
 
          if (type == null) throw new ArgumentNullException(nameof(type));

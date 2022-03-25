@@ -28,14 +28,10 @@
   <PropertyGroup Condition=" $(TargetFramework) == 'netstandard2.0' or $(TargetFramework) == 'netstandard2.1' ">
     <DefineConstants>NETSTANDARD</DefineConstants>
   </PropertyGroup>
-  <!--<ItemGroup Condition=" $(TargetFramework) == 'netstandard2.0' ">
-    <PackageReference Include="NETStandard.Library" Version="2.0.0" />
-  </ItemGroup>-->
-  <ItemGroup Condition=" $(TargetFramework) == 'netstandard2.0' or $(TargetFramework) != 'netstandard2.1' ">
-    <Reference Include="System" />
+	<ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
-    <Reference Include="System.Transactions" />
+    <Reference Include="System.Transactions" Pack="false" />
   </ItemGroup>
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

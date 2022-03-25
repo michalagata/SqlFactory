@@ -1,3 +1,6 @@
+#region Based on code from .NET Framework
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -44,7 +47,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
          }
       }
 
-      public override MetaTable GetTable(Type rowType) {
+      public override MetaTable GetTable(Type rowType, MetaTableConfiguration config) {
 
          if (rowType == null) throw Error.ArgumentNull(nameof(rowType));
 
@@ -63,7 +66,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
          @lock.AcquireWriterLock(Timeout.Infinite);
 
          try {
-            table = GetTableNoLocks(rowType);
+            table = GetTableNoLocks(rowType, config);
          } finally {
             @lock.ReleaseWriterLock();
          }
@@ -71,7 +74,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
          return table;
       }
 
-      internal MetaTable GetTableNoLocks(Type rowType) {
+      internal MetaTable GetTableNoLocks(Type rowType, MetaTableConfiguration config) {
 
          MetaTable table;
 
@@ -86,7 +89,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
                if (!this.metaTables.TryGetValue(root, out table)) {
 
-                  table = new AttributedMetaTable(this, attrs[0], root);
+                  table = new AttributedMetaTable(this, attrs[0], root, config);
 
                   foreach (MetaType mt in table.RowType.InheritanceTypes) {
                      this.metaTables.Add(mt.Type, table);
@@ -121,7 +124,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
          return null;
       }
 
-      public override MetaType GetMetaType(Type type) {
+      public override MetaType GetMetaType(Type type, MetaTableConfiguration config) {
 
          if (type == null) throw Error.ArgumentNull(nameof(type));
 
@@ -140,7 +143,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
          // Attributed meta model allows us to learn about tables we did not
          // statically know about
 
-         MetaTable tab = GetTable(type);
+         MetaTable tab = GetTable(type, config);
 
          if (tab != null) {
             return tab.RowType.GetInheritanceType(type);
@@ -169,7 +172,12 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
       public override MetaType RowType { get; }
 
-      internal AttributedMetaTable(AttributedMetaModel model, TableAttribute attr, Type rowType) {
+      internal MetaTableConfiguration Configuration { get; private set; }
+
+      internal AttributedMetaTable(AttributedMetaModel model, TableAttribute attr, Type rowType, MetaTableConfiguration config) {
+
+         // set this first
+         this.Configuration = new MetaTableConfiguration(config);
 
          this.Model = model;
          this.TableName = String.IsNullOrEmpty(attr.Name) ? rowType.Name : attr.Name;
@@ -512,17 +520,25 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
             this.dataMemberMap = new Dictionary<MetaPosition, MetaDataMember>();
 
-            int ordinal = 0;
+            InitDataMembersImpl(this.Type);
+
+            this.dataMembers = new List<MetaDataMember>(this.dataMemberMap.Values).AsReadOnly();
+         }
+      }
+
+      void InitDataMembersImpl(Type containerType, MetaComplexProperty containerCp = null) {
+         { // preserving indentation for cleaner diff
+
             BindingFlags flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy;
 
-            FieldInfo[] fis = TypeSystem.GetAllFields(this.Type, flags).ToArray();
+            FieldInfo[] fis = TypeSystem.GetAllFields(containerType, flags).ToArray();
 
             if (fis != null) {
 
                for (int i = 0, n = fis.Length; i < n; i++) {
 
                   FieldInfo fi = fis[i];
-                  MetaDataMember mm = new AttributedMetaDataMember(this, fi, ordinal);
+                  MetaDataMember mm = new AttributedMetaDataMember(this, fi, this.dataMemberMap.Count, null);
                   ValidatePrimaryKeyMember(mm);
 
                   // must be public or persistent
@@ -531,7 +547,6 @@ namespace AnubisWorks.SQLFactory.Metadata {
                   }
 
                   this.dataMemberMap.Add(new MetaPosition(fi), mm);
-                  ordinal++;
 
                   // must be persistent for the rest
 
@@ -543,14 +558,15 @@ namespace AnubisWorks.SQLFactory.Metadata {
                }
             }
 
-            PropertyInfo[] pis = TypeSystem.GetAllProperties(this.Type, flags).ToArray();
+            PropertyInfo[] pis = TypeSystem.GetAllProperties(containerType, flags).ToArray();
 
             if (pis != null) {
 
                for (int i = 0, n = pis.Length; i < n; i++) {
 
                   PropertyInfo pi = pis[i];
-                  MetaDataMember mm = new AttributedMetaDataMember(this, pi, ordinal);
+
+                  MetaDataMember mm = new AttributedMetaDataMember(this, pi, this.dataMemberMap.Count, containerCp);
                   ValidatePrimaryKeyMember(mm);
 
                   // must be public or persistent
@@ -563,8 +579,31 @@ namespace AnubisWorks.SQLFactory.Metadata {
                      continue;
                   }
 
+                  if (!mm.IsPersistent) {
+
+                     ComplexPropertyAttribute cpAttr = (ComplexPropertyAttribute)Attribute.GetCustomAttribute(pi, typeof(ComplexPropertyAttribute));
+
+                     if (cpAttr != null) {
+
+                        Type complexPropType = pi.PropertyType;
+
+                        if (!complexPropType.IsClass) {
+                           throw new InvalidOperationException("A persistent complex property must be a class.");
+                        }
+
+                        if (complexPropType.IsAbstract) {
+                           throw new InvalidOperationException("A persistent complex property cannot be an abstract type.");
+                        }
+
+                        var metaCp = new MetaComplexProperty(this, pi, cpAttr, containerCp);
+
+                        InitDataMembersImpl(complexPropType, metaCp);
+
+                        continue;
+                     }
+                  }
+
                   this.dataMemberMap.Add(new MetaPosition(pi), mm);
-                  ordinal++;
 
                   // must be persistent for the rest
 
@@ -575,8 +614,6 @@ namespace AnubisWorks.SQLFactory.Metadata {
                   InitSpecialMember(mm);
                }
             }
-
-            this.dataMembers = new List<MetaDataMember>(this.dataMemberMap.Values).AsReadOnly();
          }
       }
 
@@ -695,6 +732,8 @@ namespace AnubisWorks.SQLFactory.Metadata {
       bool isNullableType;
       object locktarget = new object(); // Hold locks on private object rather than public MetaType.
 
+      MetaComplexProperty containerCp;
+
       public override MetaType DeclaringType { get; }
 
       public override MemberInfo Member { get; }
@@ -723,7 +762,22 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
       public override UpdateCheck UpdateCheck => attrColumn?.UpdateCheck ?? UpdateCheck.Never;
 
-      public override string MappedName => attrColumn?.Name ?? attrAssoc?.Name ?? Member.Name;
+      public override string MappedName {
+         get {
+            string n = attrColumn?.Name ?? attrAssoc?.Name ?? Member.Name;
+
+            if (containerCp != null) {
+               return containerCp.FullMappedName + containerCp.Separator + n;
+            }
+
+            return n;
+         }
+      }
+
+      public override string QueryPath =>
+         (containerCp != null) ?
+            containerCp.QueryPath + MetaComplexProperty.QueryPathSeparator + Name
+            : Name;
 
       internal override bool IsDiscriminator => attrColumn?.IsDiscriminator ?? false;
 
@@ -816,7 +870,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
          }
       }
 
-      internal AttributedMetaDataMember(AttributedMetaType metaType, MemberInfo mi, int ordinal) {
+      internal AttributedMetaDataMember(AttributedMetaType metaType, MemberInfo mi, int ordinal, MetaComplexProperty containerCp) {
 
          this.memberDeclaringType = mi.DeclaringType;
          this.DeclaringType = metaType;
@@ -853,6 +907,8 @@ namespace AnubisWorks.SQLFactory.Metadata {
                throw Error.IncorrectAutoSyncSpecification(mi.Name);
             }
          }
+
+         this.containerCp = containerCp;
       }
 
       void InitAccessors() {
@@ -890,6 +946,20 @@ namespace AnubisWorks.SQLFactory.Metadata {
          return acc;
       }
 
+      public override object GetValueForDatabase(object instance) {
+
+         if (this.containerCp != null) {
+
+            instance = this.containerCp.GetValueFromRoot(instance);
+
+            if (instance == null) {
+               return null;
+            }
+         }
+
+         return base.GetValueForDatabase(instance);
+      }
+
       public override bool IsDeclaredBy(MetaType declaringMetaType) {
 
          if (declaringMetaType == null) throw Error.ArgumentNull(nameof(declaringMetaType));
@@ -899,6 +969,99 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
       public override string ToString() {
          return this.DeclaringType.ToString() + ":" + this.Member.ToString();
+      }
+   }
+
+   class MetaComplexProperty {
+
+      internal static readonly string QueryPathSeparator = new string(Mapper._pathSeparator);
+
+      readonly ComplexPropertyAttribute cpAttr;
+
+      MetaAccessor accPublic;
+      bool hasAccessors;
+      object locktarget = new object();
+
+      public PropertyInfo Member { get; }
+
+      public string Separator => cpAttr.Separator;
+
+      public string MappedName => cpAttr.Name ?? Member.Name;
+
+      public string FullMappedName =>
+         (Parent != null) ?
+            Parent.FullMappedName + Parent.Separator + MappedName
+            : MappedName;
+
+      public string QueryPath =>
+         (Parent != null) ?
+            Parent.QueryPath + QueryPathSeparator + Member.Name
+            : Member.Name;
+
+      public MetaComplexProperty Parent { get; }
+
+      public MetaAccessor MemberAccessor {
+         get {
+            InitAccessors();
+            return accPublic;
+         }
+      }
+
+      public MetaComplexProperty(AttributedMetaType metaType, PropertyInfo member, ComplexPropertyAttribute cpAttr, MetaComplexProperty parent) {
+
+         this.Member = member;
+         this.cpAttr = cpAttr;
+         this.Parent = parent;
+
+         string defaultSeparator;
+
+         if (cpAttr.Separator == null
+            && (defaultSeparator = ((AttributedMetaTable)metaType.Table).Configuration.DefaultComplexPropertySeparator) != null) {
+
+            this.cpAttr = new ComplexPropertyAttribute(this.cpAttr) {
+               Separator = defaultSeparator
+            };
+         }
+      }
+
+      void InitAccessors() {
+
+         if (!this.hasAccessors) {
+            lock (this.locktarget) {
+               if (!this.hasAccessors) {
+
+                  this.accPublic = PropertyAccessor.Create(this.Member.ReflectedType, this.Member, null);
+                  this.hasAccessors = true;
+               }
+            }
+         }
+      }
+
+      public object GetValueFromRoot(object root) {
+
+         var cpStack = new Stack<MetaComplexProperty>();
+         cpStack.Push(this);
+
+         MetaComplexProperty current = this;
+
+         while (current.Parent != null) {
+            cpStack.Push(current.Parent);
+            current = current.Parent;
+         }
+
+         object obj = root;
+
+         while (cpStack.Count > 0) {
+
+            MetaComplexProperty cp = cpStack.Pop();
+            obj = cp.MemberAccessor.GetBoxedValue(obj);
+
+            if (obj == null) {
+               break;
+            }
+         }
+
+         return obj;
       }
    }
 
@@ -938,7 +1101,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
          Type ot = (this.IsMany) ? TypeSystem.GetElementType(this.ThisMember.Type) : this.ThisMember.Type;
 
-         this.OtherType = this.ThisMember.DeclaringType.Model.GetMetaType(ot);
+         this.OtherType = this.ThisMember.DeclaringType.Model.GetMetaType(ot, ((AttributedMetaTable)this.ThisMember.DeclaringType.Table).Configuration);
          this.ThisKey = (attr.ThisKey != null) ? MakeKeys(this.ThisMember.DeclaringType, attr.ThisKey) : this.ThisMember.DeclaringType.IdentityMembers;
          this.OtherKey = (attr.OtherKey != null) ? MakeKeys(this.OtherType, attr.OtherKey) : this.OtherType.IdentityMembers;
          this.ThisKeyIsPrimaryKey = AreEqual(this.ThisKey, this.ThisMember.DeclaringType.IdentityMembers);

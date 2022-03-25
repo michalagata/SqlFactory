@@ -1,3 +1,6 @@
+#region Based on code from .NET Framework
+#endregion
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -36,7 +39,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
       /// <param name="rowType">The CLR row type.</param>
       /// <returns>The MetaTable if one exists, otherwise null.</returns>
 
-      public abstract MetaTable GetTable(Type rowType);
+      public abstract MetaTable GetTable(Type rowType, MetaTableConfiguration config);
 
       /// <summary>
       /// Get an enumeration of all tables.
@@ -50,7 +53,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
       /// This method discovers the MetaType for the given Type.
       /// </summary>
 
-      public abstract MetaType GetMetaType(Type type);
+      public abstract MetaType GetMetaType(Type type, MetaTableConfiguration config);
    }
 
    /// <summary>
@@ -77,6 +80,18 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
       public abstract MetaType RowType { get; }
    }
+
+   class MetaTableConfiguration {
+
+      public string DefaultComplexPropertySeparator { get; internal set; }
+
+      public MetaTableConfiguration() { }
+
+      internal MetaTableConfiguration(MetaTableConfiguration other) {
+         this.DefaultComplexPropertySeparator = other.DefaultComplexPropertySeparator;
+      }
+   }
+
 
    /// <summary>
    /// A MetaType represents the mapping of a domain object type onto a database table's columns.
@@ -287,6 +302,8 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
       public abstract string MappedName { get; }
 
+      public virtual string QueryPath => Name;
+
       /// <summary>
       /// The oridinal position of this member in the default layout of query results.
       /// </summary>
@@ -396,7 +413,7 @@ namespace AnubisWorks.SQLFactory.Metadata {
 
       public abstract MetaAssociation Association { get; }
 
-      public object GetValueForDatabase(object instance) {
+      public virtual object GetValueForDatabase(object instance) {
 
          object value = this.MemberAccessor.GetBoxedValue(instance);
 

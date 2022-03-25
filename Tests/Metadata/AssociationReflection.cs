@@ -1,21 +1,20 @@
-﻿using System;
-using System.Collections.ObjectModel;
-using AnubisWorks.SQLFactory.Metadata;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using System.Collections.ObjectModel;
+using NUnit.Framework;
+using SQLFactory.Metadata;
 
 namespace AnubisWorks.SQLFactory.Tests.Metadata {
 
    using static TestUtil;
 
-   [TestClass]
+   [TestFixture]
    public class AssociationReflection {
 
-      readonly Database db = SqlServerDatabase();
+      readonly Database db = MockDatabase();
 
-      [TestMethod]
+      [Test]
       public void One_To_Many() {
 
-         MetaType metaType = db.Configuration.Model.GetMetaType(typeof(Model.Employee));
+         MetaType metaType = db.Configuration.GetMetaType(typeof(Model.Employee));
 
          Assert.AreEqual(2, metaType.Associations.Count);
 
@@ -33,10 +32,10 @@ namespace AnubisWorks.SQLFactory.Tests.Metadata {
          Assert.AreEqual(typeof(Model.Employee), assoc.OtherMember.Type);
       }
 
-      [TestMethod]
+      [Test]
       public void Many_To_One() {
 
-         MetaType metaType = db.Configuration.Model.GetMetaType(typeof(Model.EmployeeTerritory));
+         MetaType metaType = db.Configuration.GetMetaType(typeof(Model.EmployeeTerritory));
 
          Assert.AreEqual(2, metaType.Associations.Count);
 

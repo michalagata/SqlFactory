@@ -131,7 +131,7 @@ namespace AnubisWorks.SQLFactory {
    /// Represents an immutable, connected SQL query.
    /// This class cannot be instantiated, to get an instance use the <see cref="Database.From(string)"/> method.
    /// </summary>
-   /// <remarks>For information on how to use SqlSet see <see href="http://maxtoroq.github.io/SQLFactory/docs/SqlSet.html">SqlSet Tutorial</see>.</remarks>
+   /// <remarks>For information on how to use SqlSet see SqlSet Tutorial.</remarks>
 
    public partial class SqlSet : ISqlSet<SqlSet, object> {
 
@@ -968,7 +968,7 @@ namespace AnubisWorks.SQLFactory {
    /// This class cannot be instantiated, to get an instance use the <see cref="Database.From&lt;TResult>(string)"/> method.
    /// </summary>
    /// <typeparam name="TResult">The type of objects to map the results to.</typeparam>
-   /// <inheritdoc select="remarks"/>
+   /// <inheritdoc path="remarks"/>
 
    public partial class SqlSet<TResult> : SqlSet, ISqlSet<SqlSet<TResult>, TResult> {
 
