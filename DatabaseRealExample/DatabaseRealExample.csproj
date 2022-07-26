@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+	<ImplicitUsings>enable</ImplicitUsings>
+	<Nullable>enable</Nullable>
+	<OutputType>Exe</OutputType>
+	<PublishTrimmed>false</PublishTrimmed>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <PublishSingleFile>false</PublishSingleFile>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <LangVersion>latest</LangVersion>
+    <TargetFramework>net6.0</TargetFramework>
+    <Version>1.1.0.1</Version>
+    <FileVersion>1.1.0.1</FileVersion>
+	<AssemblyVersion>1.1.0.1</AssemblyVersion>
+	<Product>SQLFactory.DatabaseRealExample</Product>
+    <PackageId>SQLFactory.DatabaseRealExample</PackageId>
+	<AssemblyName>SQLFactory.DatabaseRealExample</AssemblyName>
+	<RootNamespace>AnubisWorks.SQLFactory.DatabaseRealExample</RootNamespace>
+	<Authors>Michael Agata</Authors>
+    <Copyright>(c) 2019-$([System.DateTime]::Now.Year) Michael Agata</Copyright>
+    <Company>AnubisWorks</Company>
+    <OutputPath>..\DEPLOYMENT\</OutputPath>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <Configurations>Debug;Release</Configurations>
+    <Optimize Condition="'$(Configuration)'=='Release'">true</Optimize>
+    <SignAssembly>false</SignAssembly>
+	<IsPackable>true</IsPackable>
+	<AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+	<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+  </PropertyGroup>
+    <PropertyGroup Condition="'$(PublishTrimmed)' == 'true'">
+    <IsTrimmable>true</IsTrimmable>
+	<EnableTrimAnalyzer>true</EnableTrimAnalyzer>
+	<SuppressTrimAnalysisWarnings>false</SuppressTrimAnalysisWarnings>
+	<TrimmerRemoveSymbols>true</TrimmerRemoveSymbols>
+	<!-- Prevent warnings from unused code in dependencies -->
+	<TrimmerDefaultAction>link</TrimmerDefaultAction>
+	<TrimmerSingleWarn>false</TrimmerSingleWarn>
+	<EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+	<HttpActivityPropagationSupport>false</HttpActivityPropagationSupport>
+	<AutoreleasePoolSupport>false</AutoreleasePoolSupport>
+	<InvariantGlobalization>true</InvariantGlobalization>
+	<UseNativeHttpHandler>true</UseNativeHttpHandler>
+	<MetadataUpdaterSupport>false</MetadataUpdaterSupport>
+</PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Data.SqlClient" Version="4.1.0" />
+    <PackageReference Include="System.Data.SqlClient" Version="4.8.3" />
+    <!-- <PackageReference Include="System.Data.SqlClient" Version="4.8.3" /> -->
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Core\SQLFactory.csproj" />
+  </ItemGroup>
+</Project>
