@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <LangVersion>latest</LangVersion>
+        <TargetFrameworks>netstandard2.1;net6.0;net8.0</TargetFrameworks>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Version>2.1.12.18</Version>
+        <FileVersion>2.1.12.18</FileVersion>
+        <AssemblyVersion>2.1.12.18</AssemblyVersion>
+        <Product>SQLFactory</Product>
+        <PackageId>SQLFactory</PackageId>
+        <AssemblyName>SQLFactory</AssemblyName>
+        <Description>SQL mapper, CRUD helper for developers: code level</Description>
+        <RootNamespace>AnubisWorks.SQLFactory</RootNamespace>
+        <Authors>Michael Agata</Authors>
+        <Copyright>(c) 2013-2020 Michael Agata, AnubisWorks</Copyright>
+        <Company>AnubisWorks</Company>
+        <OutputPath>..\DEPLOYMENT\</OutputPath>
+        <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+        <Configurations>Debug;Release</Configurations>
+        <Optimize Condition="'$(Configuration)'=='Release'">true</Optimize>
+        <SignAssembly>false</SignAssembly>
+        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+        <AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+        <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+        <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    </PropertyGroup>
+    <PropertyGroup Condition=" $(TargetFramework) == 'netstandard2.0' or $(TargetFramework) == 'netstandard2.1' ">
+        <DefineConstants>NETSTANDARD</DefineConstants>
+    </PropertyGroup>
+    <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
+        <Reference Include="System.Core" />
+        <Reference Include="System.Data" />
+        <Reference Include="System.Transactions" Pack="false" />
+    </ItemGroup>
+    <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>SQLFactory.Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
+    </ItemGroup>
+</Project>
