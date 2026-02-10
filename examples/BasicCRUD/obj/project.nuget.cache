@@ -1,0 +1,30 @@
+{
+  "version": 2,
+  "dgSpecHash": "WW9AbbS6riI=",
+  "success": false,
+  "projectFilePath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+  "expectedPackageFiles": [
+    "/Users/anubis/.nuget/packages/microsoft.netcore.app.ref/8.0.22/microsoft.netcore.app.ref.8.0.22.nupkg.sha512",
+    "/Users/anubis/.nuget/packages/microsoft.aspnetcore.app.ref/8.0.22/microsoft.aspnetcore.app.ref.8.0.22.nupkg.sha512",
+    "/Users/anubis/.nuget/packages/microsoft.netcore.app.host.osx-arm64/8.0.22/microsoft.netcore.app.host.osx-arm64.8.0.22.nupkg.sha512"
+  ],
+  "logs": [
+    {
+      "code": "NU1507",
+      "level": "Warning",
+      "message": "There are 3 package sources defined in your configuration. When using central package management, please map your package sources with package source mapping (https://aka.ms/nuget-package-source-mapping) or specify a single package source. The following sources are defined: Cache, Anubisworks, nuget.org",
+      "projectPath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+      "warningLevel": 1,
+      "filePath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+      "targetGraphs": []
+    },
+    {
+      "code": "NU1008",
+      "level": "Error",
+      "message": "The following PackageReference items cannot define a value for Version: SQLFactory, Microsoft.Data.Sqlite. Projects using Central Package Management must define a Version value on a PackageVersion item. For more information, visit https://aka.ms/nuget/cpm/gettingstarted",
+      "projectPath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+      "filePath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+      "targetGraphs": []
+    }
+  ]
+}

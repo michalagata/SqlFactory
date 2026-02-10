@@ -1,0 +1,119 @@
+{
+  "format": 1,
+  "restore": {
+    "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj": {}
+  },
+  "projects": {
+    "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj": {
+      "version": "28.2602.33.113",
+      "restore": {
+        "projectUniqueName": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+        "projectName": "BasicCRUD",
+        "projectPath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/BasicCRUD.csproj",
+        "packagesPath": "/Users/anubis/.nuget/packages/",
+        "outputPath": "/Users/anubis/REPOSITORY/net/sqlfactory/examples/BasicCRUD/obj/",
+        "projectStyle": "PackageReference",
+        "centralPackageVersionsManagementEnabled": true,
+        "CentralPackageTransitivePinningEnabled": true,
+        "configFilePaths": [
+          "/Users/anubis/REPOSITORY/net/sqlfactory/NuGet.Config",
+          "/Users/anubis/REPOSITORY/NuGet.Config",
+          "/Users/anubis/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net8.0"
+        ],
+        "sources": {
+          "/usr/local/share/dotnet/library-packs": {},
+          "http://artifactory.anubisworks.net:82/artifactory/api/nuget/v3/AnubisWorks": {},
+          "http://artifactory.anubisworks.net:82/artifactory/api/nuget/v3/nuget": {},
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net8.0": {
+            "targetAlias": "net8.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        },
+        "restoreAuditProperties": {
+          "enableAudit": "true",
+          "auditLevel": "low",
+          "auditMode": "direct"
+        },
+        "SdkAnalysisLevel": "10.0.100"
+      },
+      "frameworks": {
+        "net8.0": {
+          "targetAlias": "net8.0",
+          "dependencies": {
+            "Microsoft.Data.Sqlite": {
+              "target": "Package",
+              "version": "[8.0.0, )"
+            },
+            "SQLFactory": {
+              "target": "Package",
+              "version": "[28.2602.33.95, )"
+            }
+          },
+          "centralPackageVersions": {
+            "BenchmarkDotNet": "0.14.0",
+            "Castle.Core": "5.1.1",
+            "coverlet.collector": "6.0.2",
+            "coverlet.msbuild": "6.0.2",
+            "Microsoft.CodeAnalysis.NetAnalyzers": "9.0.0",
+            "Microsoft.Data.SqlClient": "5.2.2",
+            "Microsoft.Data.Sqlite": "9.0.0",
+            "Microsoft.Data.Sqlite.Core": "9.0.0",
+            "Microsoft.NET.Test.Sdk": "17.11.1",
+            "Moq": "4.20.72",
+            "MySqlConnector": "2.4.0",
+            "Newtonsoft.Json": "13.0.3",
+            "Npgsql": "6.0.11",
+            "NUnit": "3.14.0",
+            "NUnit3TestAdapter": "4.6.0",
+            "SQLitePCLRaw.bundle_e_sqlite3": "2.1.10",
+            "StyleCop.Analyzers": "1.2.0-beta.556",
+            "System.CommandLine": "2.0.0-beta4.22272.1",
+            "System.Text.Json": "9.0.0"
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "downloadDependencies": [
+            {
+              "name": "Microsoft.AspNetCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Host.osx-arm64",
+              "version": "[8.0.22, 8.0.22]"
+            },
+            {
+              "name": "Microsoft.NETCore.App.Ref",
+              "version": "[8.0.22, 8.0.22]"
+            }
+          ],
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}
